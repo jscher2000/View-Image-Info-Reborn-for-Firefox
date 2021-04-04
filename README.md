@@ -1,0 +1,1 @@
+# View-Image-Info-Reborn-for-Firefox
