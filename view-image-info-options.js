@@ -1,7 +1,9 @@
 /* 
   View Image Info Reborn
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
+  Script to apply defaults and save changes on the Options page
   version 1.0 - MVP
+  version 1.1 - bug fix, tweaks and options for stand-alone viewing
 */
 
 /*** Initialize Page ***/
@@ -14,7 +16,8 @@ var oSettings = {
 	menuctrl: 'intab',			// open tab
 	/* Styling */
 	colorscheme: 'auto',		// auto / light / dark
-	fontsize: 16				// font-size for text
+	fontsize: 16,				// font-size for text
+	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
 
 // Update oSettings from storage
@@ -42,7 +45,6 @@ browser.storage.local.get("prefs").then( (results) => {
 		var selopt = document.querySelector('select[name="' + sels[i].name + '"] option[value="size' + oSettings[sels[i].name] + '"]');
 		selopt.setAttribute('selected', 'selected');
 	}
-/*
 	// Checkboxes
 	var chks = document.querySelectorAll('.chk input[type="checkbox"]');
 	for (i=0; i<chks.length; i++){
@@ -50,7 +52,6 @@ browser.storage.local.get("prefs").then( (results) => {
 		else chks[i].checked = false;
 	}
 	// More to come later
-*/
 }).catch((err) => {
 	console.log('Error retrieving "prefs" from storage: '+err.message);
 });
@@ -72,14 +73,12 @@ function updatePref(evt){
 	for (var i=0; i<sels.length; i++){
 		oSettings[sels[i].name] = parseInt(sels[i].value.slice(4));
 	}
-/*
 	// Checkboxes
 	var chks = document.querySelectorAll('.chk input[type="checkbox"]');
 	for (var i=0; i<chks.length; i++){
 		oSettings[chks[i].name] = chks[i].checked;
 	}
 	// More to come later
-*/
 	
 	// Update storage
 	browser.storage.local.set(

@@ -53,6 +53,7 @@ function handleMessage(request, sender, sendResponse){
 				tbl.className = 'viewimageinforeborn';
 				tbl.setAttribute('colorscheme', moredetails.colorscheme);
 				tbl.setAttribute('fontsize', moredetails.fontsize);
+				if (document.contentType.indexOf('image/') === 0) tbl.setAttribute('standalone', true);
 				var tbod = document.createElement('tbody');
 				tbl.appendChild(tbod);
 				// row 1
@@ -136,12 +137,8 @@ function handleMessage(request, sender, sendResponse){
 				var tgt = tbl;
 				var br = el.getBoundingClientRect();
 				if (document.contentType.indexOf('image/') === 0){ // stand-alone
-					tgt.style.left = '50%';
-					tgt.style.width = '800px';
-					tgt.style.marginLeft = '-400px';
-					tgt.style.maxWidth = '90vw';
-					if (br.top > tgt.offsetHeight){
-						tgt.style.top = window.scrollY + (br.top - tgt.offsetHeight) + 'px';
+					if (br.top > (tgt.offsetHeight + 4)){
+						tgt.style.top = window.scrollY + (br.top - (tgt.offsetHeight + 4)) + 'px';
 					} else {
 						tgt.style.top = '0px';
 					}

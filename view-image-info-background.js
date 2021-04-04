@@ -3,6 +3,7 @@
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Script to handle menu clicks, coordinate among scripts, launch new windows/tabs
   version 1.0 - MVP
+  version 1.1 - bug fix, tweaks and options for stand-alone viewing
 */
 
 /**** Create and populate data structure ****/
@@ -15,7 +16,8 @@ var oPrefs = {
 	menuctrl: 'intab',			// open tab
 	/* Styling */
 	colorscheme: 'auto',		// auto / light / dark
-	fontsize: 16				// font-size for text
+	fontsize: 16,				// font-size for text
+	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
 
 // Update oPrefs from storage
@@ -83,6 +85,7 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 	// Record user preferences
 	imgmsg.colorscheme = oPrefs.colorscheme;
 	imgmsg.fontsize = oPrefs.fontsize + 'px';
+	imgmsg.autoopen = oPrefs.autoopen;
 	// Add to array
 	pops.push(imgmsg);
 	
@@ -166,12 +169,21 @@ function handleMessage(request, sender, sendResponse){
 			} else {
 				// Probably 'inpage' so do nothing
 			}
-		} else {
+		} else { // create a new record TODO
 			console.log('now not found!', oContentInfo, pops);
+			
 		}
 	} else if ("senddetails" in request) {
 		sendResponse({
 			renderdata: pops.find(objRequest => objRequest.now === parseInt(request.senddetails))
+		});
+		return true;
+	} else if ("getprefs" in request) {
+		sendResponse({
+			pref: oPrefs,
+			tabId: sender.tab.id,
+			frameId: sender.frameId, 
+			incognito: sender.tab.incognito
 		});
 		return true;
 	} else if ("options" in request) {
