@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Options for View Image Info Reborn</title>
+<style>
+body {margin: 8px 16px; background-color: #dff; font-size: 16px;}
+h1, h2 {position: relative; margin-bottom: 0;}
+h1 {margin-top: 4px;}
+.savebtn {position: absolute; top: 0; left: 420px; margin-top: 8px;}
+</style>
+</head>
+<body>
+<h1>Options for View Image Info Reborn</h1>
+<form>
+<section>
+	<h2>Menu Item Options<button type="button" id="btnSave0" class="savebtn">Save Changes</button></h2>
+	<p class="chk">Action performed by context menu item: </p>
+		<p><label>Plain click:&nbsp; <select name="menuplain">
+			<option value="window">Show info in popup window</option>
+			<option value="inpage">Show info overlaid on image</option>
+			<option value="intab">Show info in new tab</option>
+		</select></label><br>
+		<label>Shift+click: <select name="menushift">
+			<option value="window">Show info in popup window</option>
+			<option value="inpage">Show info overlaid on image</option>
+			<option value="intab">Show info in new tab</option>
+		</select></label><br>
+		<label>Ctrl+click*: <select name="menuctrl">
+			<option value="window">Show info in popup window</option>
+			<option value="inpage">Show info overlaid on image</option>
+			<option value="intab">Show info in new tab</option>
+		</select></label> *<em>on Mac, Command+click</em></p>
+</section>
+<section>
+	<h2>Other Options<button type="button" id="btnSave1" class="savebtn">Save Changes</button></h2>
+	<p>Color scheme and font size:</p>
+		<p class="rad"><label><input type="radio" name="radColors" value="auto"> Automatic</label><br> 
+		<label><input type="radio" name="radColors" value="light"> Light background</label><br> 
+		<label><input type="radio" name="radColors" value="dark"> Dark background</label></p>
+		<p><label>Info text: <select name="fontsize">
+			<option value="size12">12px</option>
+			<option value="size13">13px</option>
+			<option value="size14">14px</option>
+			<option value="size15">15px</option>
+			<option value="size16">16px</option>
+		</select></label>
+</section>
+</form>
+<script src="view-image-info-options.js"></script>
+</body>
+</html>

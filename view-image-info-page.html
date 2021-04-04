@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="view-image-info-page.css" type="text/css">
+<title>View Image Info Reborn 1.0</title>
+</head>
+<body>
+<header>
+	<span id="controls"><button id="options" type="button" title="Open Options page">⚙️</button> <button id="btnprint" type="button" title="Print" style="filter:grayscale(1);">🖨️</button></span>
+</header>
+<main>
+	<table id="imageinfo"><tbody>
+		<tr><th>Date/Time: </th><td><span id="localTime"></span></td></tr>
+		<tr><th>Page URL: </th><td><span id="pageUrl"></span></td></tr>
+		<tr><th>Page Title: </th><td><span id="pageTitle"></span></td></tr>
+		<tr id="imgurl"><th>Image URL: </th><td><span id="sourceUrl"></span></td></tr>
+		<tr id="fname"><th>Suggested Name: </th><td><span id="fileName"><span></td></tr>
+		<tr><th>Image Type: </th><td><span id="mimeType">(Unconfirmed)</span></td></tr>
+		<tr><th>Dimensions: </th><td><span id="naturalWidth"></span> × <span id="naturalHeight"></span><span id="scaled"> (scaled to <span id="scaledWidth"></span> × <span id="scaledHeight"></span>)</span></td></tr>
+		<tr><th>Image Size: </th><td><span id="decodedSize"></span></td></tr>
+		<tr id="alt"><th>Alt Text: </th><td><span id="altText"><span></td></tr>
+		<tr id="title"><th>Title Text: </th><td><span id="titleText"><span></td></tr>
+	</tbody></table>
+	<p id="oops"><span></span><button id="btnclose" type="button" title="Close">X</button></p>
+	<p id="previewpar"><img id="preview" src="" style=""></p>
+</main>
+<script type="text/javascript" src="view-image-info-page.js"></script>
+</body>

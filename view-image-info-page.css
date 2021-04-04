@@ -1,0 +1,102 @@
+/* 
+  View Image Info Reborn
+  Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
+  Styles for new window/tab
+  version 1.0 - MVP
+*/
+
+body {
+	--body-text-color: #000;
+	color: var(--body-text-color);
+	--body-back-color: #aaa;
+	background-color: var(--body-back-color);
+	margin: 0;
+	padding: 0 8px;
+	--body-size: 12px;
+	font-size: var(--body-size);
+	overflow-y: scroll;
+	font-family: sans-serif;
+}
+
+/* Color scheme */
+@media (prefers-color-scheme: light) {
+	body {
+		--body-text-color: #000;
+		--body-back-color: #f4f4f4;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	body {
+		--body-text-color: #f4f4f4;
+		--body-back-color: #333;
+	}
+}
+/* Overrides from settings */
+body[colorscheme="light"]{
+	--body-text-color: #000;
+	--body-back-color: #f4f4f4;
+}
+body[colorscheme="dark"]{
+	--body-text-color: #f4f4f4;
+	--body-back-color: #333;
+}
+@media print{
+	body {
+		--body-text-color: #000;
+		--body-back-color: #fff;
+	}
+	#controls {
+		display: none;
+	}
+}
+
+#controls {
+	position: absolute;
+	right: 4px;
+	top: 0;
+}
+#options, #btnprint {
+	-moz-appearance: none;
+	padding: 1px 2px 3px 2px !important;
+	border-radius: 4px;
+	color: var(--body-text-color);
+	background-color: transparent !important;
+	border-color: transparent !important;
+}
+#options:hover, #options:focus,
+#btnprint:hover, #btnprint:focus {
+	border-color: var(--body-text-color) !important;
+}
+#imageinfo {
+	border: none;
+}
+#imageinfo th, #imageinfo td {
+	padding: 2px 8px 2px 0;
+	text-align: left;
+	vertical-align: top;
+	font-weight: normal;
+}
+#imgurl th, #imgurl td {
+	font-weight: bold;
+}
+#previewpar {
+	text-align: center; 
+	border: 1px solid #888; 
+	padding: 8px;
+}
+#preview {
+	max-width: 100%;
+}
+#oops {
+	display: none;
+	color: #ff0;
+	background-color: #333;
+	font-weight: bold;
+	position: fixed;
+	bottom: 0;
+	width: calc(100% - 24px);
+	height: 20px;
+}
+#oops span {
+	margin-left: 4px;
+}

@@ -1,0 +1,64 @@
+/* 
+  View Image Info Reborn
+  Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
+  Styles for in-page overlay
+  version 1.0 - MVP
+*/
+
+/* Color scheme */
+@media (prefers-color-scheme: light) {
+	.viewimageinforeborn {
+		--info-text-color: #000;
+		--info-back-color: #f4f4f4;
+		--link-color: #00f;
+	}
+	.viewimageinforeborn a {
+		font-color: #00f;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	.viewimageinforeborn {
+		--info-text-color: #f4f4f4;
+		--info-back-color: #333;
+		--link-color: #0ff;
+	}
+}
+/* Overrides from settings */
+.viewimageinforeborn[colorscheme="light"]{
+	--info-text-color: #000;
+	--info-back-color: #f4f4f4;
+	--link-color: #00f;
+}
+.viewimageinforeborn[colorscheme="dark"]{
+	--info-text-color: #f4f4f4;
+	--info-back-color: #333;
+	--link-color: #0ff;
+}
+.viewimageinforeborn {
+	min-width: 300px;
+	border: 1px solid #888;
+	margin: 1px;
+	padding: 2px 4px;
+	position: absolute !important; 
+	z-index: 10000 !important;
+	color: var(--info-text-color);
+	background-color: var(--info-back-color);
+	font-family: sans-serif !important;
+	font-size: 16px;
+	line-height: 1.2em;
+	user-select: text !important;
+}
+.viewimageinforeborn th, .viewimageinforeborn td {
+	padding: 2px 0;
+	text-align: left;
+	vertical-align: top;
+	font-weight: normal;
+}
+.viewimageinforeborn a {
+	color: var(--link-color);
+}
+.viewimageinforeborn .closebtn {
+	cursor: pointer;
+	margin-top: -2px;
+	padding: 0 6px;
+}
