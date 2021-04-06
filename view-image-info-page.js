@@ -1,8 +1,9 @@
 /* 
-  View Image Info Reborn
+  View Image Info Reborn - Page Script
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Script to populate image data into new window/tab
   version 1.0 - MVP
+  version 1.2 - bug fixes, image error handling
 */
 
 let details = {};
@@ -56,14 +57,12 @@ if (timenow){
 			document.getElementById('title').style.display = 'none';
 		}
 		// Load the image
-		var srcUrl = new URL(details.sourceUrl);
-		if (srcUrl.hostname == new URL(details.pageUrl).hostname){ //same origin
-			document.getElementById('preview').src = details.sourceUrl;
-		} else { //cross-origin -- load after a slight delay to try to catch headers
-			window.setTimeout(function(){
-				document.getElementById('preview').src = details.sourceUrl;
-			}, 250);
-		}
+		var img = document.getElementById('preview');
+		img.onerror = function(event){
+			document.querySelector('#oops span').textContent = 'Image did not load, possibly due to lack of credentials or referring host name.';
+			document.getElementById('oops').style.display = 'block';
+		};
+		img.src = details.sourceUrl;
 	});
 } else {
 	alert('Request number not set on URL?');
@@ -86,6 +85,9 @@ document.getElementById('options').addEventListener('click', function(evt){
 document.getElementById('btnprint').addEventListener('click', function(evt){
 	window.print();
 	evt.target.blur();
+}, false);
+document.getElementById('btnclose').addEventListener('click', function(evt){
+	evt.target.parentNode.style.display = '';
 }, false);
 
 /**** Handle Requests from Background script ****/

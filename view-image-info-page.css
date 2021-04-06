@@ -92,11 +92,8 @@ body[colorscheme="dark"]{
 	color: #ff0;
 	background-color: #333;
 	font-weight: bold;
-	position: fixed;
-	bottom: 0;
-	width: calc(100% - 24px);
-	height: 20px;
+	padding: 4px 12px;
 }
-#oops span {
-	margin-left: 4px;
+#oops button {
+	margin-left: 1em;
 }

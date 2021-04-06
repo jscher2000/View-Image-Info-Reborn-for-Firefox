@@ -1,5 +1,5 @@
 /* 
-  View Image Info Reborn
+  View Image Info Reborn - Main Background Script
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Script to handle menu clicks, coordinate among scripts, launch new windows/tabs
   version 1.0 - MVP

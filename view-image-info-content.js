@@ -1,8 +1,9 @@
 /* 
-  View Image Info Reborn
+  View Image Info Reborn - Content Script
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Script to gather image details from right-clicked image, and to generate info overlay
   version 1.0 - MVP
+  version 1.2 - bug fixes for stand-alone image pages, cache bypass for overlay
 */
 
 /**** Handle Requests from Background script ****/
@@ -110,7 +111,7 @@ function handleMessage(request, sender, sendResponse){
 				row.appendChild(td);
 				tbod.appendChild(row);
 				// row 5
-				if (moredetails.altText){
+				if (moredetails.altText && document.contentType.indexOf('image/') != 0){
 					row = document.createElement('tr');
 					th = document.createElement('th');
 					td = document.createElement('td');
@@ -121,7 +122,7 @@ function handleMessage(request, sender, sendResponse){
 					tbod.appendChild(row);
 				}
 				// row 6
-				if (moredetails.titleText){
+				if (moredetails.titleText && document.contentType.indexOf('image/') != 0){
 					row = document.createElement('tr');
 					th = document.createElement('th');
 					td = document.createElement('td');
@@ -142,6 +143,16 @@ function handleMessage(request, sender, sendResponse){
 					} else {
 						tgt.style.top = '0px';
 					}
+					window.addEventListener('resize', function(evt){
+						var tgt = document.querySelector('.viewimageinforeborn');
+						var img = document.querySelector('img');
+						var br = el.getBoundingClientRect();
+						if (br.top > (tgt.offsetHeight + 4)){
+							tgt.style.top = window.scrollY + (br.top - (tgt.offsetHeight + 4)) + 'px';
+						} else {
+							tgt.style.top = '0px';
+						}
+					}, false);
 				} else { // overlaid inline
 					var par = el.closest('p, div, section, aside, header, main, footer, article, body');
 					par.appendChild(tgt);
@@ -159,13 +170,20 @@ function handleMessage(request, sender, sendResponse){
 				}, false);
 			}
 
-			// Trigger image request for header intercept in the background; might not work for cross-origin
-			if (moredetails.mimeType == null){
+			// If no mimeType and user requested overlay: trigger image request for header intercept in the background
+			// Attempt cache bypass [version 1.2]
+			if (moredetails.mimeType == null && moredetails.axn == 'inpage'){
 				var imgTest = new Image();
 				imgTest.onload = function(){
 					imgTest.remove();
 				};
-				imgTest.src = moredetails.sourceUrl;
+				imgTest.onerror = function(){
+					imgTest.remove();
+				};
+				var url = new URL(moredetails.sourceUrl);
+				if (url.search.length == 0) url.search = '?viirnow=' + moredetails.now;
+				else url.search += '&viirnow=' + moredetails.now;
+				imgTest.src = url.href;
 			}
 
 		} else {
