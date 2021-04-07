@@ -14,15 +14,15 @@ Context menu can display the information in different ways. Use the Options page
 
 By default, you get a new window with the usual details. The Image Type (Content-Type or MIME Type) isn't available consistently. Still working on it.
 
-![Image of context menu](screenshots/window_1.0.png)
+![Image of context menu](screenshots/window_1.3.png)
 
 If you choose to overly the information onto the image, the details are more compact. The Image Type (Content-Type or MIME Type) isn't available consistently. Still working on it.
 
-![Image of context menu](screenshots/overlay_1.0.png)
+![Image of context menu](screenshots/overlay_1.3.png)
 
 The overlay also is available for stand-alone images (images you open into the same or a new tab).
 
-![Image of context menu](screenshots/stand-alone_1.0.png)
+![Image of context menu](screenshots/stand-alone_1.3.png)
 
 Click the gear icon on the info page, or access Options through the Add-ons page to adjust menu actions, color scheme, and font size.
 
