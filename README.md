@@ -1,6 +1,6 @@
 # View Image Info Reborn -- Firefox extension
 
-Many users are missing the convenience of View Image Info on the right-click context menu. This is an attempt to restore and expand on that feature. Getting the content-type remains a challenge due to cross-site constraints.
+Many users are missing the convenience of View Image Info on the right-click context menu. This is an attempt to restore and expand on that feature. Basic bugs have been solved, but there are new things to add.
 
 After approval, should appear here:
 
@@ -12,11 +12,11 @@ Context menu can display the information in different ways. Use the Options page
 
 ![Image of context menu](screenshots/context-menu_1.0.png)
 
-By default, you get a new window with the usual details. The Image Type (Content-Type or MIME Type) isn't available consistently. Still working on it.
+By default, you get a new window with the usual details.
 
 ![Image of context menu](screenshots/window_1.3.png)
 
-If you choose to overly the information onto the image, the details are more compact. The Image Type (Content-Type or MIME Type) isn't available consistently. Still working on it.
+If you choose to overly the information onto the image, the details are more compact.
 
 ![Image of context menu](screenshots/overlay_1.3.png)
 
