@@ -4,6 +4,7 @@
   webRequest listener to capture headings on selected image requests
   version 1.0 - MVP
   version 1.2 - bug fixes for stand-alone image pages, cache bypass for overlay
+  version 1.3 - bug fixes for missing data
 */
 
 /**** Report Headers of Intercepted Responses ****/
@@ -11,6 +12,7 @@
 function reportHeaders(details) {
 	// Only pay attention to requests on the watchlist
 	var req = watchlist.find(objRequest => objRequest.url.toLowerCase() === details.url.toLowerCase());
+	if (!req) req = watchlist.find(objRequest => objRequest.contentSrcUrl.toLowerCase() === details.url.toLowerCase());
 	if (req){
 		// Store the Content-Type and Content-Disposition headers if present
 		for (let header of details.responseHeaders) {
@@ -21,12 +23,13 @@ function reportHeaders(details) {
 				case "content-disposition":
 					// check for filename in header
 					let filename = null;
-					let sections = contentDispositionHeader.value.split(";");
+					let sections = header.value.split(";");
 					for (var i=0; i<sections.length; i++) {
 						var parts = sections[i].split("=", 2);
 						if (parts[0].trim().toLowerCase().indexOf('filename') === 0) {
 							// remove quotes
 							filename = parts[1].trim();
+							if (filename.startsWith('"')) filename = filename.slice(1);
 							if (filename.endsWith('"')) filename = filename.slice(0, -1);
 						}
 					}
@@ -41,13 +44,15 @@ function reportHeaders(details) {
 			if (req.mimeType.toLowerCase().indexOf('image/') === 0) oImgInfo.mimeType = req.mimeType;
 			else oImgInfo.nonImageMimeType = req.mimeType;
 			oImgInfo.fileName = req.fileName;
-		}
 
-		// Send message to tab
-		browser.tabs.sendMessage(
-			oImgInfo.reportingTab,
-			{"headerdetails": oImgInfo }
-		);
+			// Send message to tab
+			browser.tabs.sendMessage(
+				oImgInfo.reportingTab,
+				{"headerdetails": oImgInfo }
+			).catch((err) => {
+				console.log('Could not sendMessage to tab: ' + oImgInfo.reportingTab);
+			});
+		}
 
 		// Remove request from watchlist
 		req.done = true;

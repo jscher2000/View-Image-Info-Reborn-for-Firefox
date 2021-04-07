@@ -4,6 +4,7 @@
   Script to populate image data into new window/tab
   version 1.0 - MVP
   version 1.2 - bug fixes, image error handling
+  version 1.3 - bug fixes for missing data
 */
 
 let details = {};
@@ -24,7 +25,11 @@ if (timenow){
 		document.getElementById('localTime').textContent = new Date(details.now).toLocaleString();
 		document.getElementById('pageTitle').textContent = details.pageTitle;
 		document.getElementById('pageUrl').textContent = details.pageUrl;
-		document.getElementById('sourceUrl').textContent = details.sourceUrl;
+		if (details.imgSrc != details.sourceUrl){
+			document.getElementById('sourceUrl').textContent = details.imgSrc;
+		} else {
+			document.getElementById('sourceUrl').textContent = details.sourceUrl;
+		}
 		if (details.fileName && document.getElementById('fileName').textContent == ''){
 			document.getElementById('fileName').textContent = details.fileName;
 			document.getElementById('fname').style.display = '';
@@ -35,7 +40,7 @@ if (timenow){
 			document.getElementById('mimeType').textContent = details.mimeType.slice(details.mimeType.indexOf('/')+1).toUpperCase();
 		} else {
 			// Try again in case it's a timing problem
-			window.setTimeout(getMime, 500);
+			window.setTimeout(getMime, 300);
 		}
 		document.getElementById('naturalWidth').textContent = details.naturalWidth + 'px';
 		document.getElementById('naturalHeight').textContent = details.naturalHeight + 'px';
@@ -62,7 +67,14 @@ if (timenow){
 			document.querySelector('#oops span').textContent = 'Image did not load, possibly due to lack of credentials or referring host name.';
 			document.getElementById('oops').style.display = 'block';
 		};
-		img.src = details.sourceUrl;
+		if (details.imgSrc != details.sourceUrl){
+			var url = new URL(details.imgSrc);
+		} else {
+			url = new URL(details.sourceUrl);
+		}
+		if (url.search.length == 0) url.search = '?viirnow=' + details.now;
+		else url.search += '&viirnow=' + details.now;
+		img.src = url.href;
 	});
 } else {
 	alert('Request number not set on URL?');

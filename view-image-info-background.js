@@ -4,6 +4,7 @@
   Script to handle menu clicks, coordinate among scripts, launch new windows/tabs
   version 1.0 - MVP
   version 1.1 - bug fix, tweaks and options for stand-alone viewing
+  version 1.3 - bug fixes for missing data
 */
 
 /**** Create and populate data structure ****/
@@ -93,6 +94,7 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 	watchlist.push({
 		id: imgmsg.now,
 		url: imgmsg.sourceUrl,
+		contentSrcUrl: '',
 		done: false
 	});
 	
@@ -135,6 +137,7 @@ function handleMessage(request, sender, sendResponse){
 			oImgInfo.pageUrl = oContentInfo.pageUrl;
 			oImgInfo.pageTitle = oContentInfo.pageTitle;
 			oImgInfo.currentSrc = oContentInfo.currentSrc;
+			oImgInfo.imgSrc = oContentInfo.imgSrc;
 			oImgInfo.naturalHeight = oContentInfo.naturalHeight;
 			oImgInfo.naturalWidth = oContentInfo.naturalWidth;
 			oImgInfo.scaledHeight = oContentInfo.scaledHeight;
@@ -147,6 +150,12 @@ function handleMessage(request, sender, sendResponse){
 			oImgInfo.mimeType = oContentInfo.mimeType;
 			oImgInfo.fileName = null;
 			
+			// Check for image URL discrepancy and update watchlist item if needed [v1.3]
+			if (oImgInfo.imgSrc != oImgInfo.sourceUrl){
+				var watchitem = watchlist.find(objRequest => objRequest.id === parseInt(oContentInfo.now));
+				watchitem.contentSrcUrl = oImgInfo.imgSrc;
+			}
+
 			// Finally time to display it
 			if (oImgInfo.axn == 'window'){
 				// launch popup

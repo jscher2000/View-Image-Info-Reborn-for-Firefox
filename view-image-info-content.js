@@ -4,6 +4,7 @@
   Script to gather image details from right-clicked image, and to generate info overlay
   version 1.0 - MVP
   version 1.2 - bug fixes for stand-alone image pages, cache bypass for overlay
+  version 1.3 - bug fixes for missing data
 */
 
 /**** Handle Requests from Background script ****/
@@ -17,6 +18,7 @@ function handleMessage(request, sender, sendResponse){
 			moredetails.pageUrl = location.href;
 			moredetails.pageTitle = document.title;
 			moredetails.currentSrc = el.currentSrc;
+			moredetails.imgSrc = el.src;
 			moredetails.naturalHeight = el.naturalHeight;
 			moredetails.naturalWidth = el.naturalWidth;
 			moredetails.scaledHeight = el.height;
