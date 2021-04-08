@@ -4,6 +4,7 @@
   Script to apply defaults and save changes on the Options page
   version 1.0 - MVP
   version 1.1 - bug fix, tweaks and options for stand-alone viewing
+  version 1.5 - add Last-Modified, window/tab options
 */
 
 /*** Initialize Page ***/
@@ -17,6 +18,11 @@ var oSettings = {
 	/* Styling */
 	colorscheme: 'auto',		// auto / light / dark
 	fontsize: 16,				// font-size for text
+	popwidth: 'auto',			// width for popup window [v1.5]
+	popheight: 'auto',			// height for popup window [v1.5]
+	poptop: 'auto',				// top position for popup window [future]
+	popleft: 'auto',			// left position for popup window [future]
+	tabinback: false,			// whether to open tab in the background [v1.5]
 	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
 
@@ -45,6 +51,17 @@ browser.storage.local.get("prefs").then( (results) => {
 		var selopt = document.querySelector('select[name="' + sels[i].name + '"] option[value="size' + oSettings[sels[i].name] + '"]');
 		selopt.setAttribute('selected', 'selected');
 	}
+	// Popup sizing
+	if (oSettings.popwidth == 'auto'){
+		document.forms[0].radSizing.value = 'auto';
+		document.querySelector('[name="radSizing"][value="capture"]').setAttribute('disabled', true);
+		document.getElementById('currwidth').textContent = 'N/A';
+		document.getElementById('currheight').textContent = 'N/A';
+	} else {
+		document.forms[0].radSizing.value = 'capture';
+		document.getElementById('currwidth').textContent = oSettings.popwidth;
+		document.getElementById('currheight').textContent = oSettings.popheight;
+	}
 	// Checkboxes
 	var chks = document.querySelectorAll('.chk input[type="checkbox"]');
 	for (i=0; i<chks.length; i++){
@@ -72,6 +89,13 @@ function updatePref(evt){
 	sels = document.querySelectorAll('select[name*="fontsize"]');
 	for (var i=0; i<sels.length; i++){
 		oSettings[sels[i].name] = parseInt(sels[i].value.slice(4));
+	}
+	// Popup sizing
+	if (document.forms[0].radSizing.value == 'auto'){
+		oSettings.popwidth = 'auto';
+		oSettings.popheight = 'auto';
+	} else {
+		// no-op, can't change these here
 	}
 	// Checkboxes
 	var chks = document.querySelectorAll('.chk input[type="checkbox"]');
@@ -122,6 +146,10 @@ function lightSaveBtn(evt){
 			switch (evt.target.name){
 				case 'radColors':
 					if (evt.target.value != oSettings.colorscheme) chgd = true;
+					else chgd = false;
+					break;
+				case 'radSizing':
+					if (evt.target.value == 'auto' && oSettings.popwidth != 'auto') chgd = true;
 					else chgd = false;
 					break;
 			}

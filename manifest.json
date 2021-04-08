@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "View Image Info Reborn",
     "description": "Display info for the current image in a new window, new tab, or overlaid on the image.",
-    "version": "1.4",
+    "version": "1.5.2",
 	"applications":{
 		"gecko": {
 			"id": "view-image-info@jeffersonscher.com",

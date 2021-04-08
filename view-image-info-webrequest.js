@@ -5,6 +5,7 @@
   version 1.0 - MVP
   version 1.2 - bug fixes for stand-alone image pages, cache bypass for overlay
   version 1.3 - bug fixes for missing data
+  version 1.5 - add Last-Modified, window/tab options
 */
 
 /**** Report Headers of Intercepted Responses ****/
@@ -34,7 +35,9 @@ function reportHeaders(details) {
 						}
 					}
 					if (filename.length > 0) req.fileName = filename;
-					else req.fileName = null;
+					break;
+				case "last-modified":
+					req.lastMod = header.value;
 					break;
 			}
 		}
@@ -44,6 +47,7 @@ function reportHeaders(details) {
 			if (req.mimeType.toLowerCase().indexOf('image/') === 0) oImgInfo.mimeType = req.mimeType;
 			else oImgInfo.nonImageMimeType = req.mimeType;
 			oImgInfo.fileName = req.fileName;
+			oImgInfo.lastModified = req.lastMod;
 
 			// Send message to tab
 			browser.tabs.sendMessage(

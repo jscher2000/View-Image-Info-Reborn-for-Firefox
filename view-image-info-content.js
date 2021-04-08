@@ -6,6 +6,8 @@
   version 1.2 - bug fixes for stand-alone image pages, cache bypass for overlay
   version 1.3 - bug fixes for missing data
   version 1.4 - bug fixes for missing data
+  version 1.5.1 - add Last-Modified
+  version 1.5.2 - bug fix for Size
 */
 
 /**** Handle Requests from Background script ****/
@@ -114,6 +116,7 @@ function handleMessage(request, sender, sendResponse){
 				th = document.createElement('th');
 				td = document.createElement('td');
 				th.textContent = 'Image Size: ';
+				td.id = 'decodedSize-' + moredetails.now;
 				var sz = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.decodedSize + ')';
 				if (moredetails.transferSize > 0) sz += ' (transferred ' + (+(Math.round(moredetails.transferSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.transferSize + ') in ' +  (+(Math.round(moredetails.transferTime/1000 + 'e+2')  + 'e-2')) + ' seconds)';
 				td.textContent = sz;
@@ -142,6 +145,16 @@ function handleMessage(request, sender, sendResponse){
 					row.appendChild(td);
 					tbod.appendChild(row);
 				}
+				// row 7
+				row = document.createElement('tr');
+				th = document.createElement('th');
+				td = document.createElement('td');
+				th.textContent = 'Last Modified: ';
+				td.id = 'mod-' + moredetails.now;
+				td.textContent = moredetails.lastModified;
+				row.appendChild(th);
+				row.appendChild(td);
+				tbod.appendChild(row);
 				document.body.appendChild(tbl);
 
 				// Line up the panel with the top of the image
@@ -185,7 +198,6 @@ function handleMessage(request, sender, sendResponse){
 			if (moredetails.mimeType == null && moredetails.axn == 'inpage'){
 				var imgTest = new Image();
 				imgTest.onload = function(){
-					imgTest.remove();
 					// fill in missing size info when that happens (url's sometimes vary) [v1.4]
 					if (!moredetails.decodedSize && window.performance){
 						var resos = performance.getEntriesByType('resource');
@@ -194,9 +206,10 @@ function handleMessage(request, sender, sendResponse){
 						if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.imgSrc) > -1);
 						if (perfrec && perfrec.decodedBodySize > 0){
 							moredetails.decodedSize = perfrec.decodedBodySize;
-							document.getElementById('decodedSize').textContent = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.decodedSize + ')';
+							document.getElementById('decodedSize-' + moredetails.now).textContent = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.decodedSize + ')';
 						}
 					}
+					imgTest.remove();
 				};
 				imgTest.onerror = function(){
 					imgTest.remove();
@@ -221,6 +234,10 @@ function handleMessage(request, sender, sendResponse){
 		var tdid = 'mime-' + moredetails.now;
 		if (moredetails.mimeType && document.getElementById(tdid)){
 			document.getElementById(tdid).textContent = moredetails.mimeType.slice(moredetails.mimeType.indexOf('/')+1).toUpperCase();
+		}
+		tdid = 'mod-' + moredetails.now;
+		if (moredetails.lastModified && moredetails.lastModified.length > 0 && document.getElementById(tdid)){
+			document.getElementById(tdid).textContent = moredetails.lastModified;
 		}
 	}
 }
