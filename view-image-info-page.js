@@ -5,6 +5,7 @@
   version 1.0 - MVP
   version 1.2 - bug fixes, image error handling
   version 1.3 - bug fixes for missing data
+  version 1.4 - bug fixes for missing data
 */
 
 let details = {};
@@ -20,7 +21,11 @@ if (timenow){
 		// Set color scheme and font size
 		document.body.setAttribute('colorscheme', details.colorscheme);
 		document.body.setAttribute('style', '--body-size: ' + details.fontsize);
-		document.title = details.sourceUrl;
+		if (details.imgSrc != details.sourceUrl){
+			document.title = details.imgSrc;
+		} else {
+			document.title = details.sourceUrl;
+		}
 		// Populate data into the page
 		document.getElementById('localTime').textContent = new Date(details.now).toLocaleString();
 		document.getElementById('pageTitle').textContent = details.pageTitle;
@@ -61,11 +66,25 @@ if (timenow){
 		} else {
 			document.getElementById('title').style.display = 'none';
 		}
+
 		// Load the image
 		var img = document.getElementById('preview');
 		img.onerror = function(event){
 			document.querySelector('#oops span').textContent = 'Image did not load, possibly due to lack of credentials or referring host name.';
 			document.getElementById('oops').style.display = 'block';
+		};
+		img.onload = function(event){
+			// fill in missing size info when that happens (url's sometimes vary) [v1.4]
+			if (!details.decodedSize && window.performance){
+				var resos = performance.getEntriesByType('resource');
+				var perfrec = resos.find(obj => obj.name.indexOf(details.sourceUrl) > -1);
+				if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.currentSrc) > -1);
+				if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(details.imgSrc) > -1);
+				if (perfrec && perfrec.decodedBodySize > 0){
+					details.decodedSize = perfrec.decodedBodySize;
+					document.getElementById('decodedSize').textContent = (+(Math.round(details.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + details.decodedSize + ')';
+				}
+			}
 		};
 		if (details.imgSrc != details.sourceUrl){
 			var url = new URL(details.imgSrc);

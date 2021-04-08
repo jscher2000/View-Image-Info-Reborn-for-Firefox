@@ -5,6 +5,7 @@
   version 1.0 - MVP
   version 1.1 - bug fix, tweaks and options for stand-alone viewing
   version 1.3 - bug fixes for missing data
+  version 1.4 - bug fixes for missing data
 */
 
 /**** Create and populate data structure ****/
@@ -181,6 +182,11 @@ function handleMessage(request, sender, sendResponse){
 		} else { // create a new record TODO
 			console.log('now not found!', oContentInfo, pops);
 			
+		}
+	} else if ("unwatch" in request) {
+		var indx = watchlist.findIndex(objRequest => objRequest.id === parseInt(request.unwatch));
+		if (indx > -1){
+			watchlist.splice(indx, 1); 
 		}
 	} else if ("senddetails" in request) {
 		sendResponse({

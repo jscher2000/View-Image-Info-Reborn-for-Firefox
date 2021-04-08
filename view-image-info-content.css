@@ -3,6 +3,7 @@
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Styles for in-page overlay
   version 1.0 - MVP
+  version 1.4 - tweaks
 */
 
 /* Color scheme */
@@ -53,6 +54,9 @@
 	text-align: left;
 	vertical-align: top;
 	font-weight: normal;
+}
+.viewimageinforeborn th {
+	white-space: nowrap;
 }
 .viewimageinforeborn a {
 	color: var(--link-color);

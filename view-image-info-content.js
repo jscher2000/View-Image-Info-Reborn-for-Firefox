@@ -5,6 +5,7 @@
   version 1.0 - MVP
   version 1.2 - bug fixes for stand-alone image pages, cache bypass for overlay
   version 1.3 - bug fixes for missing data
+  version 1.4 - bug fixes for missing data
 */
 
 /**** Handle Requests from Background script ****/
@@ -32,7 +33,9 @@ function handleMessage(request, sender, sendResponse){
 			moredetails.transferSize = null;
 			moredetails.transferTime = null;
 			if (window.performance){
-				var imgp = performance.getEntriesByName(el.currentSrc);
+				var imgp = performance.getEntriesByName(moredetails.sourceUrl);
+				if (!imgp) imgp = performance.getEntriesByName(moredetails.currentSrc);
+				if (!imgp) imgp = performance.getEntriesByName(moredetails.imgSrc);
 				if (imgp && imgp.length > 0 && imgp[0].decodedBodySize > 0){
 					moredetails.decodedSize = imgp[0].decodedBodySize;
 					if (imgp[0].transferSize > 0) moredetails.transferSize = imgp[0].transferSize;
@@ -65,8 +68,13 @@ function handleMessage(request, sender, sendResponse){
 				var td = document.createElement('td');
 				th.textContent = 'Image URL: ';
 				var lnk = document.createElement('a');
-				lnk.href = moredetails.sourceUrl;
-				lnk.textContent = moredetails.sourceUrl
+				if (moredetails.imgSrc != moredetails.sourceUrl){
+					lnk.href = moredetails.imgSrc;
+					lnk.textContent = moredetails.imgSrc;
+				} else {
+					lnk.href = moredetails.sourceUrl;
+					lnk.textContent = moredetails.sourceUrl;
+				}
 				td.appendChild(lnk);
 				var btn = document.createElement('button');
 				btn.textContent = ' X ';
@@ -178,6 +186,17 @@ function handleMessage(request, sender, sendResponse){
 				var imgTest = new Image();
 				imgTest.onload = function(){
 					imgTest.remove();
+					// fill in missing size info when that happens (url's sometimes vary) [v1.4]
+					if (!moredetails.decodedSize && window.performance){
+						var resos = performance.getEntriesByType('resource');
+						var perfrec = resos.find(obj => obj.name.indexOf(moredetails.sourceUrl) > -1);
+						if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.currentSrc) > -1);
+						if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.imgSrc) > -1);
+						if (perfrec && perfrec.decodedBodySize > 0){
+							moredetails.decodedSize = perfrec.decodedBodySize;
+							document.getElementById('decodedSize').textContent = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.decodedSize + ')';
+						}
+					}
 				};
 				imgTest.onerror = function(){
 					imgTest.remove();
@@ -186,6 +205,11 @@ function handleMessage(request, sender, sendResponse){
 				if (url.search.length == 0) url.search = '?viirnow=' + moredetails.now;
 				else url.search += '&viirnow=' + moredetails.now;
 				imgTest.src = url.href;
+			} else if (document.contentType.indexOf('image/') === 0 && moredetails.axn == 'inpage'){
+				// remove standalone from watchlist
+				browser.runtime.sendMessage({
+					unwatch: moredetails.now
+				});
 			}
 
 		} else {
