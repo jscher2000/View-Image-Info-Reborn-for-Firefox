@@ -4,7 +4,7 @@ Many users are missing the convenience of View Image Info on the right-click con
 
 https://addons.mozilla.org/firefox/addon/view-image-info-reborn/ 
 
-## Screenshots (version 1.5.x)
+## Screenshots (version 1.6)
 
 Context menu can display the information in different ways. Use the Options page to change what click, Shift+Click and Ctrl+click (Mac: Command+Click) do.
 
@@ -12,7 +12,7 @@ Context menu can display the information in different ways. Use the Options page
 
 By default, you get a new window with the usual details.
 
-![Image of context menu](screenshots/window_1.5.png)
+![Image of context menu](screenshots/window_1.6.png)
 
 If you choose to overlay the information onto the image, the details are more compact.
 
