@@ -7,6 +7,7 @@
   version 1.3 - bug fixes for missing data
   version 1.4 - bug fixes for missing data
   version 1.5 - add Last-Modified, window/tab options
+  version 1.6 - Save As options
 */
 
 /**** Create and populate data structure ****/
@@ -55,84 +56,97 @@ browser.menus.create({
 // Kick off info display with a message to the content script
 let watchlist = [];
 browser.menus.onClicked.addListener((menuInfo, currTab) => {
-	// Send message to the content script to gather information or show an overlay
-	var imgmsg = {};
-	// Check modifiers to determine action
-	imgmsg.axn = 'window';
-	switch (menuInfo.modifiers.length){
-		case 0: //Plain
-			imgmsg.axn = oPrefs.menuplain;
-			break;
-		case 1: // Shift or Ctrl
-			if (menuInfo.modifiers.includes('Shift')){
-				imgmsg.axn = oPrefs.menushift;
-			} else if ((browser.runtime.PlatformOs == 'mac' && menuInfo.modifiers.includes('Command')) ||
-						(browser.runtime.PlatformOs != 'mac' && menuInfo.modifiers.includes('Ctrl'))){
-				imgmsg.axn = oPrefs.menuctrl;
-			} else {
-				// What is the user trying? Show the window.
-			}
-			break;
-		default:
-			// User held down two modifier keys? Show the window.
-	}
-
-	// Assemble reference information
-	// Use time as object key
-	imgmsg.now = Date.now();
-	// Track source tab and reporting tab (initially the same)
-	imgmsg.tabId = currTab.id;
-	imgmsg.reportingTab = currTab.id;
-	// Track frame in source tab (rarely applicable)
-	imgmsg.frameId = menuInfo.frameId;
-	// Track private window status (for new popup window)
-	imgmsg.incognito = currTab.incognito;
-	// Record info provided from the menu API
-	imgmsg.targetElementId = menuInfo.targetElementId;
-	imgmsg.sourceUrl = menuInfo.srcUrl;
-	// Record user preferences
-	imgmsg.colorscheme = oPrefs.colorscheme;
-	imgmsg.fontsize = oPrefs.fontsize + 'px';
-	imgmsg.popwidth = oPrefs.popwidth;
-	imgmsg.popheight = oPrefs.popheight;
-	imgmsg.autoopen = oPrefs.autoopen;
-	// Add to array
-	pops.push(imgmsg);
-	
-	// Update watchlist for header interception
-	watchlist.push({
-		id: imgmsg.now,
-		url: imgmsg.sourceUrl,
-		contentSrcUrl: '',
-		fileName: '',
-		lastMod: '',
-		done: false
-	});
-	
-	// Send instructions to the content script
-	if (menuInfo.frameId == 0){ //main frame
+	if (currTab.url.indexOf('moz-extension:') == 0 && currTab.url.indexOf('moz-extension:') > -1){
+		// No recursion, please!
 		browser.tabs.sendMessage(
 			currTab.id,
-			{"getdetails": imgmsg}
+			{"oopsmsg": "View Image Info Reborn should not be called from its own popup window, and may not work in other extension pages."},
+			{frameId: menuInfo.frameId}
 		);
-	} else { //need to inject CSS and execute script in this frame first before sending the message
-		var styling = browser.tabs.insertCSS({
-			frameId: menuInfo.frameId,
-			file: 'view-image-info-content.css'
+	} else {
+		// Send message to the content script to gather information or show an overlay
+		var imgmsg = {};
+		// Check modifiers to determine action
+		imgmsg.axn = 'window';
+		switch (menuInfo.modifiers.length){
+			case 0: //Plain
+				imgmsg.axn = oPrefs.menuplain;
+				break;
+			case 1: // Shift or Ctrl
+				if (menuInfo.modifiers.includes('Shift')){
+					imgmsg.axn = oPrefs.menushift;
+				} else if ((browser.runtime.PlatformOs == 'mac' && menuInfo.modifiers.includes('Command')) ||
+							(browser.runtime.PlatformOs != 'mac' && menuInfo.modifiers.includes('Ctrl'))){
+					imgmsg.axn = oPrefs.menuctrl;
+				} else {
+					// What is the user trying? Show the window.
+				}
+				break;
+			default:
+				// User held down two modifier keys? Show the window.
+		}
+
+		// Assemble reference information
+		// Use time as object key
+		imgmsg.now = Date.now();
+		// Track source tab and reporting tab (initially the same)
+		imgmsg.tabId = currTab.id;
+		imgmsg.reportingTab = currTab.id;
+		// Track frame in source tab (rarely applicable)
+		imgmsg.frameId = menuInfo.frameId;
+		// Track private window status (for new popup window)
+		imgmsg.incognito = currTab.incognito;
+		// Record info provided from the menu API
+		imgmsg.targetElementId = menuInfo.targetElementId;
+		imgmsg.sourceUrl = menuInfo.srcUrl;
+		// Record user preferences
+		imgmsg.colorscheme = oPrefs.colorscheme;
+		imgmsg.fontsize = oPrefs.fontsize + 'px';
+		imgmsg.popwidth = oPrefs.popwidth;
+		imgmsg.popheight = oPrefs.popheight;
+		imgmsg.autoopen = oPrefs.autoopen;
+		// Add to array
+		pops.push(imgmsg);
+		
+		// Update watchlist for header interception
+		watchlist.push({
+			id: imgmsg.now,
+			url: imgmsg.sourceUrl,
+			contentSrcUrl: '',
+			fileName: '',
+			lastMod: '',
+			done: false
 		});
-		styling.then(() => {
-			var executing = browser.tabs.executeScript({
+		
+		// Send instructions to the content script
+		if (menuInfo.frameId == 0){ //main frame
+			browser.tabs.sendMessage(
+				currTab.id,
+				{"getdetails": imgmsg}
+			);
+		} else { //need to inject CSS and execute script in this frame first before sending the message
+			var styling = browser.tabs.insertCSS({
 				frameId: menuInfo.frameId,
-				file: 'view-image-info-content.js'
+				file: 'view-image-info-content.css'
 			});
-			executing.then(() => {
-				browser.tabs.sendMessage(
-					currTab.id,
-					{"getdetails": imgmsg},
-					{frameId: menuInfo.frameId}
-				);
+			styling.then(() => {
+				var executing = browser.tabs.executeScript({
+					frameId: menuInfo.frameId,
+					file: 'view-image-info-content.js'
+				});
+				executing.then(() => {
+					browser.tabs.sendMessage(
+						currTab.id,
+						{"getdetails": imgmsg},
+						{frameId: menuInfo.frameId}
+					);
+				}).catch((err) => {
+					console.log(err);
+				});
+			}).catch((err) => {
+				console.log(err);
 			});
-		});
+		}
 	}
 })
 
@@ -147,6 +161,7 @@ function handleMessage(request, sender, sendResponse){
 		if (oImgInfo){
 			oImgInfo.pageUrl = oContentInfo.pageUrl;
 			oImgInfo.pageTitle = oContentInfo.pageTitle;
+			oImgInfo.referUrl = oContentInfo.referUrl;
 			oImgInfo.currentSrc = oContentInfo.currentSrc;
 			oImgInfo.imgSrc = oContentInfo.imgSrc;
 			oImgInfo.naturalHeight = oContentInfo.naturalHeight;
@@ -174,7 +189,7 @@ function handleMessage(request, sender, sendResponse){
 				var props = {
 					type: 'popup', 
 					incognito: request.showinfo.incognito,
-					url: '/view-image-info-page.html?request=' + request.showinfo.now
+					url: '/view-image-info-page.html?request=' + request.showinfo.now + '&pop=true'
 				};
 				if (oPrefs.popheight != 'auto'){
 					props.height = parseInt(oPrefs.popheight);
@@ -189,7 +204,7 @@ function handleMessage(request, sender, sendResponse){
 			} else if (oImgInfo.axn == 'intab'){
 				// create tab
 				var props = {
-					url: '/view-image-info-page.html?request=' + request.showinfo.now
+					url: '/view-image-info-page.html?request=' + request.showinfo.now + '&pop=false'
 				};
 				if (oPrefs.tabinback){
 					props.active = false;

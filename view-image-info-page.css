@@ -3,6 +3,7 @@
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Styles for new window/tab
   version 1.0 - MVP
+  version 1.6 - Save As options
 */
 
 body {
@@ -71,6 +72,7 @@ body[colorscheme="dark"]{
 }
 #imageinfo {
 	border: none;
+	margin-top: 8px;
 }
 #imageinfo th, #imageinfo td {
 	padding: 2px 8px 2px 0;
@@ -91,8 +93,8 @@ body[colorscheme="dark"]{
 }
 #oops {
 	display: none;
-	color: #ff0;
-	background-color: #333;
+	color: highlightText;
+	background-color: highlight;
 	font-weight: bold;
 	padding: 4px 12px;
 }
@@ -109,4 +111,49 @@ body[colorscheme="dark"]{
 	background: var(--body-back-color);
 	border: 1px solid var(--body-text-color);
 	border-radius: 6px;
+}
+/* Save As... [v1.6] */
+#saveandpreview {
+	position: relative;
+}
+#btnsaveas {
+	position: absolute;
+	font-size: var(--body-size);
+	top: calc((-2 * var(--body-size)) + 3px);
+	right: 0;
+}
+#saveaslist {
+	position: absolute;
+	top: -2px;
+	right: 0;
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	background-color: var(--body-back-color);
+	border: 1px solid var(--body-text-color);
+	border-bottom: none;
+	display: none;
+}
+#saveaslist li {
+	margin: 0;
+	padding: 0;
+	border-bottom: 1px solid var(--body-text-color);
+}
+#saveaslist li a {
+	display: block;
+	color: var(--body-text-color);
+	text-decoration: none;
+	padding: 6px 12px;
+}
+#saveaslist li a:hover {
+	color: highlightText;
+	background-color: highlight;
+}
+#btnsaveas[state="closed"] > span::after {
+	content: "▼";
+	color: var(--body-text-color);
+}
+#btnsaveas[state="open"] > span::after {
+	content: "▲";
+	color: var(--body-text-color);
 }

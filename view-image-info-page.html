@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="view-image-info-page.css" type="text/css">
-<title>View Image Info Reborn 1.5</title>
+<title>View Image Info Reborn 1.6</title>
 </head>
 <body>
 <header>
@@ -11,8 +11,10 @@
 </header>
 <main>
 	<table id="imageinfo"><tbody>
-		<tr><th>Page URL: </th><td><span id="pageUrl"></span></td></tr>
 		<tr><th>Page Title: </th><td><span id="pageTitle"></span></td></tr>
+		<tr><th>Page URL: </th><td><span id="pageUrl"></span></td></tr>
+		<tr id="refUrl"><th>Referring URL: </th><td><span id="referrer"></span></td></tr>
+	</tbody><tbody>
 		<tr id="imgurl"><th>Image URL: </th><td><span id="sourceUrl"></span></td></tr>
 		<tr id="fname"><th title="filename parameter provided by the server in the Content-Disposition header">Suggested Name: </th><td><span id="fileName"><span></td></tr>
 		<tr><th title="Last part of the Content-Type header provided by the server">Image Type: </th><td><span id="mimeType">(Unconfirmed)</span></td></tr>
@@ -23,7 +25,17 @@
 		<tr id="modified"><th title="Value of Last-Modified header provided by the server">Last Modified: </th><td><span id="lastMod"></span></td></tr>
 	</tbody></table>
 	<p id="oops"><span></span><button id="btnclose" type="button" title="Close">X</button></p>
-	<p id="previewpar"><img id="preview" src="" style=""></p>
+	<div id="saveandpreview">
+		<button id="btnsaveas" type="button" state="closed">Save As... Options <span></span></button>
+		<ul id="saveaslist">
+			<li id="saveasserved"><a href="">Save "as served"</a></li>
+			<li id="saveasnoaccept"><a href="">Request without image/webp</a></li>
+			<li id="saveasie11"><a href="">Request as IE 11</a></li>
+			<li id="saveaspng"><a href="" download="">Convert to PNG (via canvas)</a></li>
+			<li id="saveasjpg"><a href="" download="">Convert to JPEG (via canvas)</a></li>
+		</ul>
+		<p id="previewpar"><img id="preview" src="" style=""></p>
+	</div>
 	<p><em>Information captured:</em> <span id="localTime"></span></p>
 </main>
 <form id="popsizer" action="#" onsubmit="return false">

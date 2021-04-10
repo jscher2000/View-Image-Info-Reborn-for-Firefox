@@ -7,6 +7,7 @@
   version 1.3 - bug fixes for missing data
   version 1.4 - bug fixes for missing data
   version 1.5 - add Last-Modified, window/tab options
+  version 1.6 - Save As options
 */
 
 let details = {};
@@ -30,7 +31,16 @@ if (timenow){
 		}
 		// Populate data into the page
 		document.getElementById('pageTitle').textContent = details.pageTitle;
-		document.getElementById('pageUrl').textContent = details.pageUrl;
+		if (details.pageUrl === details.imgSrc){
+			document.getElementById('pageUrl').textContent = '(Stand Alone)';
+		} else {
+			document.getElementById('pageUrl').textContent = details.pageUrl;
+		}
+		if (details.referUrl && details.referUrl.length > 0){
+			document.getElementById('referrer').textContent = details.referUrl;
+		} else {
+			document.getElementById('refUrl').style.display = 'none';
+		}
 		if (details.imgSrc != details.sourceUrl){
 			document.getElementById('sourceUrl').textContent = details.imgSrc;
 		} else {
@@ -100,10 +110,17 @@ if (timenow){
 		if (url.search.length == 0) url.search = '?viirnow=' + details.now;
 		else url.search += '&viirnow=' + details.now;
 		img.src = url.href;
+		
+		// Create Save as Request Links
+		document.querySelector('#saveasserved a[href]').href = url.href.replace('viirnow', 'viirattach');
+		document.querySelector('#saveasnoaccept a[href]').href = url.href.replace('viirnow', 'viirstripwebp');
+		document.querySelector('#saveasie11 a[href]').href = url.href.replace('viirnow', 'viirasie11');
 	});
 } else {
 	alert('Request number not set on URL?');
 }
+var popup = params.get('pop');
+if (popup != 'true') document.getElementById('showresize').style.display = 'none';
 
 function getMime(){
 	browser.runtime.sendMessage({
@@ -126,6 +143,7 @@ document.getElementById('btnprint').addEventListener('click', function(evt){
 document.getElementById('btnclose').addEventListener('click', function(evt){
 	evt.target.parentNode.style.display = '';
 }, false);
+
 // Popup window sizing [v1.5]
 function updateWH(evt){
 	document.getElementById('currwidth').textContent = window.outerWidth + 'px';
@@ -164,7 +182,7 @@ document.getElementById('btnSave').addEventListener('click', function(evt){
 	browser.runtime.sendMessage({
 		popsizing: sizeupdate
 	}).catch((err) => {
-		document.getElementById('oops').textContent = 'Error updating storage: ' + err.message;
+		document.querySelector('#oops span').textContent = 'Error updating storage: ' + err.message;
 		document.getElementById('oops').style.display = 'block';
 	});
 	// Close the overlay
@@ -175,6 +193,63 @@ document.getElementById('btnCancel').addEventListener('click', function(evt){
 	window.removeEventListener('resize', updateWH, false);
 	// Close the overlay
 	document.getElementById('popsizer').style.display = '';
+}, false);
+
+// Save As menu / Image Conversions [v1.6]
+function makeBlobDownload(tgtLink, fmt){
+	// Create download filename
+	var fname = document.getElementById('fileName').textContent;
+	var img = document.getElementById('preview');
+	var qual = 0.92;
+	if (fname.length == 0){
+		var path = new URL(img.src).pathname;
+		if (path.slice(path.length - 1) == '/') path = path.slice(0, path.length - 1);
+		fname = path.slice(path.lastIndexOf('/') + 1);
+	}
+	if (fmt == 'image/jpeg'){
+		fname = fname.replace(/\.webp/i, '.jpg').replace(/\.png/i, '.jpg').replace(/\.gif/i, '.jpg');
+		if (fname.slice(-4) != '.jpg') fname += '.jpg';
+	} else if (fmt == 'image/png'){
+		fname = fname.replace(/\.webp/i, '.png').replace(/\.jpg/i, '.png').replace(/\.gif/i, '.png');
+		if (fname.slice(-4) != '.png') fname += '.png';
+	}
+	tgtLink.setAttribute('download', fname);
+	// Create canvas
+	var canv = document.createElement('canvas');
+	canv.width = img.naturalWidth;
+	canv.height = img.naturalHeight;
+	var ctx = canv.getContext('2d');
+	if (fmt == 'image/jpeg'){
+		// Match the background color (fix "white" to avoid transparency)
+		var b = window.getComputedStyle(img).getPropertyValue('background-color');
+		if (b === 'rgba(0, 0, 0, 0)') b = '#fff';
+		ctx.fillStyle = b;
+		ctx.fillRect(0, 0, canv.width, canv.height);
+	}
+	// Then add the image and update the link
+	try {
+		ctx.drawImage(img, 0, 0);
+		canv.toBlob((blob) => {
+			tgtLink.href = URL.createObjectURL(blob);
+			tgtLink.parentNode.style.display = '';
+		}, fmt, qual);
+	} catch(err){
+		tgtLink.parentNode.style.display = 'none';
+	}
+}
+
+document.getElementById('btnsaveas').addEventListener('click', function(evt){
+	var btn = evt.target;
+	if (btn.getAttribute('state') == 'closed'){
+		btn.setAttribute('state', 'open');
+		document.getElementById('saveaslist').style.display = 'block';
+		if (document.querySelector('#saveaspng a').getAttribute('href') == '') makeBlobDownload(document.querySelector('#saveaspng a'), 'image/png');
+		if (document.querySelector('#saveasjpg a').getAttribute('href') == '') makeBlobDownload(document.querySelector('#saveasjpg a'), 'image/jpeg');
+	} else {
+		btn.setAttribute('state', 'closed');
+		document.getElementById('saveaslist').style.display = '';
+	}
+	btn.blur();
 }, false);
 
 /**** Handle Requests from Background script ****/
@@ -198,6 +273,9 @@ function handleMessage(request, sender, sendResponse){
 		} else if (document.getElementById('lastMod').textContent == ''){
 			document.getElementById('modified').style.display = 'none';
 		}
+	} else if ('oopsmsg' in request){
+		document.querySelector('#oops span').textContent = request.oopsmsg;
+		document.getElementById('oops').style.display = 'block';
 	}
 }
 browser.runtime.onMessage.addListener(handleMessage);

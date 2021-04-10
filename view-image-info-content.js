@@ -8,6 +8,7 @@
   version 1.4 - bug fixes for missing data
   version 1.5.1 - add Last-Modified
   version 1.5.2 - bug fix for Size
+  version 1.6 - Save As options
 */
 
 /**** Handle Requests from Background script ****/
@@ -20,6 +21,11 @@ function handleMessage(request, sender, sendResponse){
 		if (el){
 			moredetails.pageUrl = location.href;
 			moredetails.pageTitle = document.title;
+			if (document.contentType.indexOf('image/') === 0){ // stand-alone
+				moredetails.referUrl = document.referrer;
+			} else {
+				moredetails.referUrl = '';
+			}
 			moredetails.currentSrc = el.currentSrc;
 			moredetails.imgSrc = el.src;
 			moredetails.naturalHeight = el.naturalHeight;
@@ -193,9 +199,9 @@ function handleMessage(request, sender, sendResponse){
 				}, false);
 			}
 
-			// If no mimeType and user requested overlay: trigger image request for header intercept in the background
+			// If user requested overlay: trigger image request for header intercept in the background
 			// Attempt cache bypass [version 1.2]
-			if (moredetails.mimeType == null && moredetails.axn == 'inpage'){
+			if (moredetails.axn == 'inpage'){
 				var imgTest = new Image();
 				imgTest.onload = function(){
 					// fill in missing size info when that happens (url's sometimes vary) [v1.4]
@@ -218,13 +224,7 @@ function handleMessage(request, sender, sendResponse){
 				if (url.search.length == 0) url.search = '?viirnow=' + moredetails.now;
 				else url.search += '&viirnow=' + moredetails.now;
 				imgTest.src = url.href;
-			} else if (document.contentType.indexOf('image/') === 0 && moredetails.axn == 'inpage'){
-				// remove standalone from watchlist
-				browser.runtime.sendMessage({
-					unwatch: moredetails.now
-				});
 			}
-
 		} else {
 			window.alert('Wasn\'t able to determine where you right-clicked!');
 		}
