@@ -4,6 +4,7 @@
   Styles for new window/tab
   version 1.0 - MVP
   version 1.6 - Save As options
+  version 1.6.1 - bug fixes
 */
 
 body {
@@ -148,6 +149,10 @@ body[colorscheme="dark"]{
 #saveaslist li a:hover {
 	color: highlightText;
 	background-color: highlight;
+}
+#saveaslist li a:active {
+	color: highlight;
+	background-color: highlightText;
 }
 #btnsaveas[state="closed"] > span::after {
 	content: "▼";

@@ -7,6 +7,7 @@
   version 1.3 - bug fixes for missing data
   version 1.5 - add Last-Modified, window/tab options
   version 1.6 - Save As options
+  version 1.6.1 - bug fixes
 */
 
 /**** Report Headers of Intercepted Responses ****/
@@ -85,6 +86,7 @@ browser.webRequest.onResponseStarted.addListener(
 var wrTasks = {
 	onBefSendHead: [],
 	modAccept: [],
+	modAcceptNoWebp: [],
 	modUA: [],
 	onHeadRecd: []
 };
@@ -108,7 +110,8 @@ function doRedirect(requestDetails){
 				}
 			}
 		}
-		if (srch.indexOf('viirattach=') > -1){		// Just add Content-Disposition: attachment
+
+		if (srch.indexOf('viirattach=') > -1){			// Use standard image Accept, add Content-Disposition: attachment
 			if (searcharray.length == 1){
 				url.search = '';
 			} else {
@@ -118,9 +121,12 @@ function doRedirect(requestDetails){
 					url.search = '?' + searcharray.join('&');
 				}
 			}
-			wrTasks.onHeadRecd.push(url.href);		// To modify Content-Disposition to attachment
+			wrTasks.onBefSendHead.push(url.href);		// To modify Accept header
+			wrTasks.modAccept.push(url.href);			// To modify Accept header
+			wrTasks.onHeadRecd.push(url.href);			// To modify Content-Disposition to attachment
 		}
-		if (srch.indexOf('viirstripwebp=') > -1){		// To remove image/webp from Accept header
+
+		if (srch.indexOf('viirstripwebp=') > -1){		// Use image Accept without webp, add Content-Disposition: attachment
 			if (searcharray.length == 1){
 				url.search = '';
 			} else {
@@ -130,11 +136,12 @@ function doRedirect(requestDetails){
 					url.search = '?' + searcharray.join('&');
 				}
 			}
-			wrTasks.onBefSendHead.push(url.href);	// To modify Accept header
-			wrTasks.modAccept.push(url.href);		// To modify Accept header
-			wrTasks.onHeadRecd.push(url.href);		// To modify Content-Disposition to attachment
+			wrTasks.onBefSendHead.push(url.href);		// To modify Accept header
+			wrTasks.modAcceptNoWebp.push(url.href);		// To modify Accept header
+			wrTasks.onHeadRecd.push(url.href);			// To modify Content-Disposition to attachment
 		}
-		if (srch.indexOf('viirasie11=') > -1){			// To request "as" Internet Explorer 11
+
+		if (srch.indexOf('viirasie11=') > -1){			// Use image Accept without webp, IE 11 UA, Content-Disposition: attachment
 			if (searcharray.length == 1){
 				url.search = '';
 			} else {
@@ -144,10 +151,10 @@ function doRedirect(requestDetails){
 					url.search = '?' + searcharray.join('&');
 				}
 			}
-			wrTasks.onBefSendHead.push(url.href);	// To modify Accept and User-Agent header
-			wrTasks.modAccept.push(url.href);		// To modify Accept header (to better match IE)
-			wrTasks.modUA.push(url.href);			// To modify User-Agent header
-			wrTasks.onHeadRecd.push(url.href);		// To modify Content-Disposition to attachment
+			wrTasks.onBefSendHead.push(url.href);		// To modify Accept and User-Agent header
+			wrTasks.modAcceptNoWebp.push(url.href);		// To modify Accept header (to better match IE)
+			wrTasks.modUA.push(url.href);				// To modify User-Agent header
+			wrTasks.onHeadRecd.push(url.href);			// To modify Content-Disposition to attachment
 		}
 			
 		// Remove and re-add event listeners
@@ -203,29 +210,32 @@ browser.webRequest.onBeforeRequest.addListener(
 /**** Clean Accept Header and Modify User-Agent for Selected Requests [version 1.6] ****/
 
 function modReqHeaders(details){
-	// Accept header
+	// Accept header - default for inline image requests (instead of main frame requests)
 	var taskIndex = wrTasks.modAccept.indexOf(details.url);
 	if (taskIndex > -1){
-		// Find Accept header and strip image/webp
+		// Find Accept header and use old-style image Accept header
 		for (let header of details.requestHeaders) {
 			if (header.name.toLowerCase() === 'accept'){
-				let pos = header.value.toLowerCase().indexOf('image/webp,');
-				if (pos > -1){ // remove this content type with trailing comma
-					header.value = header.value.slice(0, pos) + header.value.slice(pos + 11);
-				}
-				pos = header.value.toLowerCase().indexOf('image/webp');
-				if (pos > -1){ // remove this content type
-					header.value = header.value.slice(0, pos) + header.value.slice(pos + 10);
-				}
-				pos = header.value.indexOf(',,');
-				if (pos > -1){ // clean up any double comma
-					header.value = header.value.slice(0, pos) + header.value.slice(pos + 1);
-				}
+				header.value = 'image/webp,*/*';
 				break;
 			}
 		}
 		// Purge from modAccept list
 		wrTasks.modAccept.splice(taskIndex, 1);
+	}
+
+	// Accept header - inline image request minus image/webp
+	var taskIndex = wrTasks.modAcceptNoWebp.indexOf(details.url);
+	if (taskIndex > -1){
+		// Find Accept header and use old-style image Accept header
+		for (let header of details.requestHeaders) {
+			if (header.name.toLowerCase() === 'accept'){
+				header.value = '*/*';
+				break;
+			}
+		}
+		// Purge from modAcceptNoWebp list
+		wrTasks.modAcceptNoWebp.splice(taskIndex, 1);
 	}
 	// User-Agent
 	taskIndex = wrTasks.modUA.indexOf(details.url);
@@ -237,7 +247,7 @@ function modReqHeaders(details){
 				break;
 			}
 		}
-		// Purge from modAccept list
+		// Purge from modUA list
 		wrTasks.modUA.splice(taskIndex, 1);
 	}
 	// Purge from event tasks

@@ -8,6 +8,7 @@
   version 1.4 - bug fixes for missing data
   version 1.5 - add Last-Modified, window/tab options
   version 1.6 - Save As options
+  version 1.6.1 - bug fixes
 */
 
 let details = {};
@@ -24,7 +25,7 @@ if (timenow){
 		// Set color scheme and font size
 		document.body.setAttribute('colorscheme', details.colorscheme);
 		document.body.setAttribute('style', '--body-size: ' + details.fontsize);
-		if (details.imgSrc != details.sourceUrl){
+		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
 			document.title = details.imgSrc;
 		} else {
 			document.title = details.sourceUrl;
@@ -41,7 +42,7 @@ if (timenow){
 		} else {
 			document.getElementById('refUrl').style.display = 'none';
 		}
-		if (details.imgSrc != details.sourceUrl){
+		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
 			document.getElementById('sourceUrl').textContent = details.imgSrc;
 		} else {
 			document.getElementById('sourceUrl').textContent = details.sourceUrl;
@@ -102,7 +103,7 @@ if (timenow){
 				}
 			}
 		};
-		if (details.imgSrc != details.sourceUrl){
+		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
 			var url = new URL(details.imgSrc);
 		} else {
 			url = new URL(details.sourceUrl);
