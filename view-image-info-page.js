@@ -9,6 +9,7 @@
   version 1.5 - add Last-Modified, window/tab options
   version 1.6 - Save As options
   version 1.6.1 - bug fixes
+  version 1.7 - Referrer
 */
 
 let details = {};
@@ -32,6 +33,7 @@ if (timenow){
 		}
 		// Populate data into the page
 		document.getElementById('pageTitle').textContent = details.pageTitle;
+		var refHref = details.pageUrl;
 		if (details.pageUrl === details.imgSrc){
 			document.getElementById('pageUrl').textContent = '(Stand Alone)';
 		} else {
@@ -39,6 +41,7 @@ if (timenow){
 		}
 		if (details.referUrl && details.referUrl.length > 0){
 			document.getElementById('referrer').textContent = details.referUrl;
+			refHref = details.referUrl;
 		} else {
 			document.getElementById('refUrl').style.display = 'none';
 		}
@@ -55,6 +58,7 @@ if (timenow){
 		}
 		if (details.mimeType){
 			document.getElementById('mimeType').textContent = details.mimeType.slice(details.mimeType.indexOf('/')+1).toUpperCase();
+			document.getElementById('defaultmime').textContent = '(' + document.getElementById('mimeType').textContent + ')';
 		} else {
 			// Try again in case it's a timing problem
 			st = window.setTimeout(getMime, 300);
@@ -108,14 +112,21 @@ if (timenow){
 		} else {
 			url = new URL(details.sourceUrl);
 		}
-		if (url.search.length == 0) url.search = '?viirnow=' + details.now;
-		else url.search += '&viirnow=' + details.now;
+		if (url.search.length == 0) url.search = '?viirnocache=' + details.now;
+		else url.search += '&viirnocache=' + details.now;
 		img.src = url.href;
 		
 		// Create Save as Request Links
-		document.querySelector('#saveasserved a[href]').href = url.href.replace('viirnow', 'viirattach');
-		document.querySelector('#saveasnoaccept a[href]').href = url.href.replace('viirnow', 'viirstripwebp');
-		document.querySelector('#saveasie11 a[href]').href = url.href.replace('viirnow', 'viirasie11');
+		document.querySelector('#saveasserved a[href]').href = url.href.replace('viirnocache', 'viirattach');
+		document.querySelector('#saveasnoaccept a[href]').href = url.href.replace('viirnocache', 'viirstripwebp');
+		document.querySelector('#saveasie11 a[href]').href = url.href.replace('viirnocache', 'viirasie11');
+		
+		// Update Referrer Form Options [v1.7]
+		var ref = new URL(refHref);
+		var lbl = document.querySelector('#referForm input[value="origin-only"]').labels[0];
+		lbl.setAttribute('title', lbl.title.replace('_ORIGIN_', ref.origin));
+		lbl = document.querySelector('#referForm input[value="origin-path"]').labels[0];
+		lbl.setAttribute('title', lbl.title.replace('_ORIGINPATH_', ref.origin + ref.pathname));
 	});
 } else {
 	alert('Request number not set on URL?');
@@ -129,6 +140,7 @@ function getMime(){
 	}).then((response) => {
 		if (details.mimeType){
 			document.getElementById('mimeType').textContent = details.mimeType.slice(details.mimeType.indexOf('/')+1).toUpperCase();
+			document.getElementById('defaultmime').textContent = '(' + document.getElementById('mimeType').textContent + ')';
 		}
 	});
 }
@@ -253,6 +265,72 @@ document.getElementById('btnsaveas').addEventListener('click', function(evt){
 	btn.blur();
 }, false);
 
+// Referrer options [v1.7]
+var referPolicyButtons = document.getElementsByClassName('btnRefer');
+for (var i=0; i<referPolicyButtons.length; i++){
+	referPolicyButtons[i].addEventListener('click', function(evt){
+		// do not send this client to the link
+		evt.preventDefault();
+		evt.stopPropagation();
+		// show or hide form
+		var frm = document.getElementById('referForm');
+		if (frm.style.display == 'block' && (evt.target.closest('li') == frm.closest('li'))){
+			// hide the form
+			frm.style.display = '';
+		} else {
+			// insert the form into the targeted li
+			evt.target.closest('li').appendChild(frm);
+			frm.style.display = 'block';
+		}
+		return false;
+	}, false);
+}
+document.getElementById('referForm').addEventListener('change', function(evt){
+	var tgt = evt.target;
+	if (tgt.name == 'radReferPolicy'){
+		// Harvest form info
+		var title = tgt.labels[0].getAttribute('title'), ref = '', btnText = '';
+		switch(tgt.value){
+			case 'no-referrer':
+				btnText = 'NR';
+				break;
+			case 'origin-only':
+				btnText = 'OO';
+				ref = title.slice(title.indexOf(':') + 1).trim();
+				break;
+			case 'origin-path':
+				btnText = 'OP';
+				ref = title.slice(title.indexOf(':') + 1).trim();
+				break;
+		}
+
+		// Hide the form
+		tgt.form.style.display = '';
+
+		// Update the button
+		for (var i=0; i<referPolicyButtons.length; i++){
+			referPolicyButtons[i].textContent = btnText;
+			referPolicyButtons[i].setAttribute('title', title);
+		}
+		// Update the links
+		var linkNoAccept = document.querySelector('#saveasnoaccept a[href]'), linkAsIE11 = document.querySelector('#saveasie11 a[href]'), pos;
+		if (ref.length == 0){
+			pos = linkNoAccept.href.indexOf('&viirreferrer=');
+			if (pos > -1) linkNoAccept.href = linkNoAccept.href.slice(0, pos);
+			pos = linkAsIE11.href.indexOf('&viirreferrer=');
+			if (pos > -1) linkAsIE11.href = linkAsIE11.href.slice(0, pos);
+		} else {
+			pos = linkNoAccept.href.indexOf('&viirreferrer=');
+			if (pos > -1) linkNoAccept.href = linkNoAccept.href.slice(0, pos) + '&viirreferrer=' + encodeURIComponent(ref);
+			else linkNoAccept.href += '&viirreferrer=' + encodeURIComponent(ref);
+			pos = linkAsIE11.href.indexOf('&viirreferrer=');
+			if (pos > -1) linkAsIE11.href = linkAsIE11.href.slice(0, pos) + '&viirreferrer=' + encodeURIComponent(ref);
+			else linkAsIE11.href += '&viirreferrer=' + encodeURIComponent(ref);
+		}
+	}
+}, false);
+
+
 /**** Handle Requests from Background script ****/
 let moredetails = {};
 function handleMessage(request, sender, sendResponse){
@@ -261,6 +339,7 @@ function handleMessage(request, sender, sendResponse){
 		var moredetails = request.headerdetails;
 		if (moredetails.mimeType){
 			document.getElementById('mimeType').textContent = moredetails.mimeType.slice(moredetails.mimeType.indexOf('/')+1).toUpperCase();
+			document.getElementById('defaultmime').textContent = '(' + document.getElementById('mimeType').textContent + ')';
 		}
 		if (moredetails.fileName && moredetails.fileName.length > 0 && document.getElementById('fileName').textContent == ''){
 			document.getElementById('fileName').textContent = moredetails.fileName;

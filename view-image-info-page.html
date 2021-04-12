@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="view-image-info-page.css" type="text/css">
-<title>View Image Info Reborn 1.6</title>
+<title>View Image Info Reborn 1.7</title>
 </head>
 <body>
 <header>
@@ -26,14 +26,24 @@
 	</tbody></table>
 	<p id="oops"><span></span><button id="btnclose" type="button" title="Close">X</button></p>
 	<div id="saveandpreview">
-		<button id="btnsaveas" type="button" state="closed">Save As... Options <span></span></button>
-		<ul id="saveaslist">
-			<li id="saveasserved"><a href="">Save "as served"</a></li>
-			<li id="saveasnoaccept"><a href="">Request without image/webp</a></li>
-			<li id="saveasie11"><a href="">Request as IE 11</a></li>
-			<li id="saveaspng"><a href="" download="">Convert to PNG (via canvas)</a></li>
-			<li id="saveasjpg"><a href="" download="">Convert to JPEG (via canvas)</a></li>
-		</ul>
+		<div id="imagetools">
+			<span id="btnspan">
+				<button id="btnsaveas" type="button" state="closed">Save As... Options <span></span></button>
+			</span>
+			<ul id="saveaslist">
+				<li id="saveasserved"><a href="">Save "as served" <span id="defaultmime"></span></a></li>
+				<li id="saveasnoaccept"><a href="">Request without image/webp <button class="btnRefer" title="Do not add a Referer header">NR</button></a></li>
+				<li id="saveasie11"><a href="">Request as IE 11 <button class="btnRefer" title="Do not add a Referer header">NR</button></a></li>
+				<li id="saveaspng"><a href="" download="">Convert to PNG (via canvas)</a></li>
+				<li id="saveasjpg"><a href="" download="">Convert to JPEG (via canvas)</a></li>
+			</ul>
+			<form id="referForm" action="">
+				<p>If server requires referring URL<br>
+				   <label title="Do not add a Referer header"><input type="radio" name="radReferPolicy" value="no-referrer" checked>None</label>
+				   <label title="Set Referer header to: _ORIGIN_"><input type="radio" name="radReferPolicy" value="origin-only">Origin</label> 
+				   <label title="Set Referer header to: _ORIGINPATH_"><input type="radio" name="radReferPolicy" value="origin-path">Origin/Path</label></p>
+			</form>
+		</div>
 		<p id="previewpar"><img id="preview" src="" style=""></p>
 	</div>
 	<p><em>Information captured:</em> <span id="localTime"></span></p>

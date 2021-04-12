@@ -8,6 +8,7 @@
   version 1.5 - add Last-Modified, window/tab options
   version 1.6 - Save As options
   version 1.6.1 - bug fixes
+  version 1.7 - Referrer
 */
 
 /**** Report Headers of Intercepted Responses ****/
@@ -88,6 +89,8 @@ var wrTasks = {
 	modAccept: [],
 	modAcceptNoWebp: [],
 	modUA: [],
+	modReferer: [],
+	modNoCacheOnly: [],
 	onHeadRecd: []
 };
 
@@ -104,6 +107,38 @@ function doRedirect(requestDetails){
 				url.search = '';
 			} else {
 				var viirIndex = searcharray.findIndex((element) => element.indexOf('viirnow=') > -1);
+				if (viirIndex > -1) {
+					searcharray.splice(viirIndex, 1);
+					url.search = '?' + searcharray.join('&');
+				}
+			}
+		}
+
+		if (srch.indexOf('viirnocache=') > -1){			// For extension page
+			if (searcharray.length == 1){
+				url.search = '';
+			} else {
+				var viirIndex = searcharray.findIndex((element) => element.indexOf('viirnocache=') > -1);
+				if (viirIndex > -1) {
+					searcharray.splice(viirIndex, 1);
+					url.search = '?' + searcharray.join('&');
+				}
+			}
+			wrTasks.modNoCacheOnly.push(url.href);		// To modify Cache-Control
+			wrTasks.onHeadRecd.push(url.href);			// To modify Cache-Control
+		}
+
+		if (srch.indexOf('viirreferrer=') > -1){		// Set Referer (this supplements either modAccept or modUA)
+			var refInfo = searcharray.find((element) => element.indexOf('viirreferrer=') > -1);
+			var oRef = {
+				imgUrl: null,
+				refUrl: refInfo.split('=')[1]
+			};
+
+			if (searcharray.length == 1){
+				url.search = '';
+			} else {
+				var viirIndex = searcharray.findIndex((element) => element.indexOf('viirreferrer=') > -1);
 				if (viirIndex > -1) {
 					searcharray.splice(viirIndex, 1);
 					url.search = '?' + searcharray.join('&');
@@ -139,6 +174,10 @@ function doRedirect(requestDetails){
 			wrTasks.onBefSendHead.push(url.href);		// To modify Accept header
 			wrTasks.modAcceptNoWebp.push(url.href);		// To modify Accept header
 			wrTasks.onHeadRecd.push(url.href);			// To modify Content-Disposition to attachment
+			if (oRef){
+				oRef.imgUrl = url.href;
+				wrTasks.modReferer.push(oRef);
+			}
 		}
 
 		if (srch.indexOf('viirasie11=') > -1){			// Use image Accept without webp, IE 11 UA, Content-Disposition: attachment
@@ -155,6 +194,10 @@ function doRedirect(requestDetails){
 			wrTasks.modAcceptNoWebp.push(url.href);		// To modify Accept header (to better match IE)
 			wrTasks.modUA.push(url.href);				// To modify User-Agent header
 			wrTasks.onHeadRecd.push(url.href);			// To modify Content-Disposition to attachment
+			if (oRef){
+				oRef.imgUrl = url.href;
+				wrTasks.modReferer.push(oRef);
+			}
 		}
 			
 		// Remove and re-add event listeners
@@ -193,6 +236,7 @@ function doRedirect(requestDetails){
 // Set up listener to clean the viir parameter from the url so it doesn't hit the server
 var urlpatterns = [
 	"*://*/*viirnow=*",
+	"*://*/*viirnocache=*",
 	"*://*/*viirattach=*",
 	"*://*/*viirstripwebp=*",
 	"*://*/*viirasie11=*"
@@ -241,7 +285,7 @@ function modReqHeaders(details){
 	taskIndex = wrTasks.modUA.indexOf(details.url);
 	if (taskIndex > -1){
 		// Find User-Agent and modify to IE 11
-		for (header of details.requestHeaders) {
+		for (let header of details.requestHeaders) {
 			if (header.name.toLowerCase() === 'user-agent'){
 				header.value = 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko';
 				break;
@@ -250,6 +294,31 @@ function modReqHeaders(details){
 		// Purge from modUA list
 		wrTasks.modUA.splice(taskIndex, 1);
 	}
+	// Referrer
+	taskIndex = wrTasks.modReferer.findIndex(oTask => oTask.imgUrl === details.url);
+	if (taskIndex > -1){
+		// Replace or Add Referer
+		let refHeader;
+		for (let header of details.requestHeaders) {
+			if (header.name.toLowerCase() === 'referer'){
+				refHeader = header;
+				break;
+			}
+		}
+		if (refHeader) {
+			// Switch referrer
+			refHeader.value = decodeURIComponent(wrTasks.modReferer[taskIndex].refUrl);
+		} else {
+			// Create a new header
+			details.requestHeaders.push({
+				name: 'Referer',
+				value: decodeURIComponent(wrTasks.modReferer[taskIndex].refUrl)
+			});
+		}
+		// Purge from modReferer list
+		wrTasks.modReferer.splice(taskIndex, 1);
+	}
+
 	// Purge from event tasks
 	taskIndex = wrTasks.onBefSendHead.indexOf(details.url);
 	if (taskIndex > -1) wrTasks.onBefSendHead.splice(taskIndex, 1);
@@ -261,33 +330,61 @@ function modReqHeaders(details){
 /**** Set Attachment Disposition for Save As Re-Requests [version 1.6] ****/
 
 function modConDisp(details) {
-	// Content-Disposition header
+	// Content-Disposition and Cache-Control headers
 	var taskIndex = wrTasks.onHeadRecd.indexOf(details.url);
 	if (taskIndex > -1){
-		// find the Content-Disposition header if present
-		let contentDispositionHeader;
-		for (let header of details.responseHeaders) {
-			switch (header.name.toLowerCase()) {
-				case "content-disposition":
-					contentDispositionHeader = header;
-					break;
+		// Cache-Control only
+		var noCacheIndex = wrTasks.modNoCacheOnly.indexOf(details.url);
+		if (noCacheIndex > -1){
+			// extract the Cache-Control header if present
+			let ccHeader;
+			for (let header of details.responseHeaders) {
+				switch (header.name.toLowerCase()) {
+					case "cache-control":
+						ccHeader = header;
+						break;
+				}
 			}
-		}
-		if (contentDispositionHeader) {
-			// Switch inline to attachment
-			contentDispositionHeader.value = contentDispositionHeader.value.replace('inline', 'attachment');
+			// update the Cache-Control header
+			if (ccHeader){
+				ccHeader.value = 'no-store';
+			} else {
+				// Create a new header
+				details.responseHeaders.push({
+					name: 'cache-control',
+					value: 'no-store'
+				});
+			}
+			
+			// Purge from event tasks
+			wrTasks.modNoCacheOnly.splice(noCacheIndex, 1);
+
 		} else {
-			// Create a CD header
-			details.responseHeaders.push({
-				name: 'content-disposition',
-				value: 'attachment'
-			});
+			// find the Content-Disposition header if present
+			let contentDispositionHeader;
+			for (let header of details.responseHeaders) {
+				switch (header.name.toLowerCase()) {
+					case "content-disposition":
+						contentDispositionHeader = header;
+						break;
+				}
+			}
+			if (contentDispositionHeader) {
+				// Switch inline to attachment
+				contentDispositionHeader.value = contentDispositionHeader.value.replace('inline', 'attachment');
+			} else {
+				// Create a CD header
+				details.responseHeaders.push({
+					name: 'content-disposition',
+					value: 'attachment'
+				});
+			}
 		}
 
 		// Purge from event tasks
 		wrTasks.onHeadRecd.splice(taskIndex, 1);
 	}
-	
+
 	// Dispatch headers, we're done
 	return { responseHeaders: details.responseHeaders };
 }

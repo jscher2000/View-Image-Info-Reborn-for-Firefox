@@ -5,6 +5,7 @@
   version 1.0 - MVP
   version 1.6 - Save As options
   version 1.6.1 - bug fixes
+  version 1.7 - Referrer
 */
 
 body {
@@ -48,7 +49,7 @@ body[colorscheme="dark"]{
 		--body-back-color: #fff;
 		padding: 0;
 	}
-	#controls {
+	#controls, #imagetools {
 		display: none;
 	}
 }
@@ -114,24 +115,34 @@ body[colorscheme="dark"]{
 	border-radius: 6px;
 }
 /* Save As... [v1.6] */
-#saveandpreview {
+#imagetools {
 	position: relative;
+	height: 2em;
+}
+#btnspan {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+#previewpar {
+	margin-top: 0;
 }
 #btnsaveas {
-	position: absolute;
 	font-size: var(--body-size);
-	top: calc((-2 * var(--body-size)) + 3px);
-	right: 0;
+	padding: 2px 8px;
+	border: 1px solid #888;
+	color: buttontext;
+	background-color: buttonface;
 }
 #saveaslist {
 	position: absolute;
-	top: -2px;
+	top: calc((1em * 1.2) + 7px);
 	right: 0;
 	margin: 0;
 	padding: 0;
 	list-style-type: none;
 	background-color: var(--body-back-color);
-	border: 1px solid var(--body-text-color);
+	border: 1px solid #888;
 	border-bottom: none;
 	display: none;
 }
@@ -161,4 +172,35 @@ body[colorscheme="dark"]{
 #btnsaveas[state="open"] > span::after {
 	content: "▲";
 	color: var(--body-text-color);
+}
+#saveaslist li#saveasnoaccept a, #saveaslist li#saveasie11 a {
+	position: relative;
+	padding-right: 45px;
+}
+/* Referrer controls [v1.7] */
+.btnRefer {
+	font-size: var(--body-size);
+	padding: 0 4px;
+	position: absolute;
+	right: 4px;
+	border: none;
+	color: buttonface;
+	background-color: buttontext;
+	opacity: 0.5;
+}
+.btnRefer:hover {
+	opacity: 1;
+}
+#referForm {
+	display: none;
+}
+#referForm p {
+	margin: 0;
+	padding: 6px 12px;
+}
+input[name="radReferPolicy"] {
+	margin-right: 4px;
+}
+input[value="no-referrer"] {
+	margin-left: 0;
 }
