@@ -10,6 +10,7 @@
   version 1.6 - Save As options
   version 1.6.1 - bug fixes
   version 1.7 - Referrer
+  version 1.7.1 - bug fix
 */
 
 let details = {};
@@ -164,19 +165,21 @@ function updateWH(evt){
 }
 document.getElementById('showresize').addEventListener('click', function(evt){
 	updateWH();
+	var frm = document.getElementById('popsizer');
 	if (details.popwidth == 'auto'){
-		document.forms[0].radSizing.value = 'auto';
+		frm.radSizing.value = 'auto';
 	} else {
-		document.forms[0].radSizing.value = 'capture';
+		frm.radSizing.value = 'capture';
 	}
-	document.getElementById('popsizer').style.display = 'block';
+	frm.style.display = 'block';
 	window.addEventListener('resize', updateWH, false);
 }, false);
 document.getElementById('btnSave').addEventListener('click', function(evt){
 	// Remove the resize event handler
 	window.removeEventListener('resize', updateWH, false);
 	// Update image details and build updater object
-	if (document.forms[0].radSizing.value == 'auto'){
+	var frm = document.getElementById('popsizer');
+	if (frm.radSizing.value == 'auto'){
 		details.popwidth = 'auto';
 		details.popheight = 'auto';
 		var sizeupdate = {
