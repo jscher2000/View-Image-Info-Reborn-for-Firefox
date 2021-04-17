@@ -8,6 +8,7 @@
   version 1.4 - bug fixes for missing data
   version 1.5 - add Last-Modified, window/tab options
   version 1.6 - Save As options
+  version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
 */
 
 /**** Create and populate data structure ****/
@@ -23,8 +24,9 @@ var oPrefs = {
 	fontsize: 16,				// font-size for text
 	popwidth: 'auto',			// width for popup window [v1.5]
 	popheight: 'auto',			// height for popup window [v1.5]
-	poptop: 'auto',				// top position for popup window [future]
-	popleft: 'auto',			// left position for popup window [future]
+	poptop: 'auto',				// top position for popup window [v1.8]
+	popleft: 'auto',			// left position for popup window [v1.8]
+	previewstyle: 'topthumb',	// or 'topfitw' or 'classic' for below [v1.8]
 	tabinback: false,			// whether to open tab in the background [v1.5]
 	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
@@ -104,6 +106,9 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 		imgmsg.fontsize = oPrefs.fontsize + 'px';
 		imgmsg.popwidth = oPrefs.popwidth;
 		imgmsg.popheight = oPrefs.popheight;
+		imgmsg.poptop = oPrefs.poptop;
+		imgmsg.popleft = oPrefs.popleft;
+		imgmsg.previewstyle = oPrefs.previewstyle;
 		imgmsg.autoopen = oPrefs.autoopen;
 		// Add to array
 		pops.push(imgmsg);
@@ -171,8 +176,8 @@ function handleMessage(request, sender, sendResponse){
 			oImgInfo.decodedSize = oContentInfo.decodedSize;
 			oImgInfo.transferSize = oContentInfo.transferSize;
 			oImgInfo.transferTime = oContentInfo.transferTime;
-			oImgInfo.altText = oContentInfo.altText;
-			oImgInfo.titleText = oContentInfo.titleText;
+			oImgInfo.attribJSON = oContentInfo.attribJSON;
+			oImgInfo.ahref = oContentInfo.ahref;
 			oImgInfo.mimeType = oContentInfo.mimeType;
 			oImgInfo.fileName = '';
 			oImgInfo.lastModified = '';
@@ -197,9 +202,28 @@ function handleMessage(request, sender, sendResponse){
 				if (oPrefs.popwidth != 'auto'){
 					props.width = parseInt(oPrefs.popwidth);
 				}
+				if (oPrefs.poptop != 'auto'){
+					props.top = parseInt(oPrefs.poptop);		// not working yet, see bug 1271047
+				}
+				if (oPrefs.popleft != 'auto'){
+					props.left = parseInt(oPrefs.popleft);		// not working yet, see bug 1271047
+				}
 				var w = browser.windows.create(props);
 				w.then((winfo) => {
 					oImgInfo.reportingTab = winfo.tabs[0].id;
+					if (oPrefs.poptop != 'auto' || oPrefs.popleft != 'auto'){	// set position [v1.8]
+						var props = {};
+						if (oPrefs.poptop != 'auto'){
+							props.top = parseInt(oPrefs.poptop);
+						}
+						if (oPrefs.popleft != 'auto'){
+							props.left = parseInt(oPrefs.popleft);
+						}
+						browser.windows.update(
+							winfo.id,
+							props
+						);
+					}
 				});
 			} else if (oImgInfo.axn == 'intab'){
 				// create tab
@@ -236,12 +260,16 @@ function handleMessage(request, sender, sendResponse){
 			if (oPrefs.popwidth != 'auto') {
 				oPrefs.popwidth = 'auto';
 				oPrefs.popheight = 'auto';
+				oPrefs.poptop = 'auto';
+				oPrefs.popleft = 'auto';
 			} else {
 				return;
 			}
 		} else {
 			oPrefs.popwidth = sizeupdt.popwidth;
 			oPrefs.popheight = sizeupdt.popheight;
+			oPrefs.poptop = sizeupdt.poptop;
+			oPrefs.popleft = sizeupdt.popleft;
 		}
 		// Write to storage
 		browser.storage.local.set(
@@ -251,6 +279,8 @@ function handleMessage(request, sender, sendResponse){
 			for (var i=0; i<pops.length; i++){
 				pops[i].popwidth = oPrefs.popwidth;
 				pops[i].popheight = oPrefs.popheight;
+				pops[i].poptop = oPrefs.poptop;
+				pops[i].popleft = oPrefs.popleft;
 			}
 		}).catch((err) => {
 			console.log('Error on browser.storage.local.set(): ' + err.message);

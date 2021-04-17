@@ -1,11 +1,12 @@
 /* 
-  View Image Info Reborn
+  View Image Info Reborn - Info Page Styles
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Styles for new window/tab
   version 1.0 - MVP
   version 1.6 - Save As options
   version 1.6.1 - bug fixes
   version 1.7 - Referrer
+  version 1.8 - Referrer for preview, updated layout
 */
 
 body {
@@ -25,23 +26,31 @@ body {
 @media (prefers-color-scheme: light) {
 	body {
 		--body-text-color: #000;
-		--body-back-color: #f4f4f4;
+		--body-back-color: #f8f8f8;
+		--table-head-color: #f4f4f4;
+		--table-back-color: #333;
 	}
 }
 @media (prefers-color-scheme: dark) {
 	body {
 		--body-text-color: #f4f4f4;
 		--body-back-color: #333;
+		--table-head-color: #000;
+		--table-back-color: #e4e4e4;
 	}
 }
 /* Overrides from settings */
 body[colorscheme="light"]{
 	--body-text-color: #000;
-	--body-back-color: #f4f4f4;
+	--body-back-color: #f8f8f8;
+	--table-head-color: #f4f4f4;
+	--table-back-color: #333;
 }
 body[colorscheme="dark"]{
 	--body-text-color: #f4f4f4;
 	--body-back-color: #333;
+	--table-head-color: #000;
+	--table-back-color: #e4e4e4;
 }
 @media print{
 	body {
@@ -49,49 +58,111 @@ body[colorscheme="dark"]{
 		--body-back-color: #fff;
 		padding: 0;
 	}
-	#controls, #imagetools {
-		display: none;
+	#controls, #imagetools, #previewtools {
+		display: none !important;
 	}
 }
 
 #controls {
 	position: absolute;
-	right: 4px;
-	top: 0;
+	right: 16px;
+	top: 2px;
+	z-index: 5;
+	background-color: var(--body-back-color);
+	border-radius: 4px;
 }
-#options, #btnprint, #showresize {
+#options, #btnprint, #showresize, #btnsaveas {
 	-moz-appearance: none;
+	font-size: var(--body-size);
 	padding: 1px 2px 3px 2px !important;
 	border-radius: 4px;
 	color: var(--body-text-color);
-	background-color: transparent !important;
+	background-color: rgba(0, 0, 0, 0.05) !important;
 	border-color: transparent !important;
+	min-width: 30px;
+	min-height: 30px;
 }
 #options:hover, #options:focus,
 #btnprint:hover, #btnprint:focus,
-#showresize:hover, #showresize:focus {
+#showresize:hover, #showresize:focus,
+#btnsaveas:hover, #btnsaveas:focus {
 	border-color: var(--body-text-color) !important;
 }
-#imageinfo {
-	border: none;
-	margin-top: 8px;
+#btnsaveas[state="open"] {
+	color: var(--body-back-color);
+	background-color: var(--body-text-color) !important;
 }
-#imageinfo th, #imageinfo td {
-	padding: 2px 8px 2px 0;
+.imageinfo {
+	border: none;
+	margin-top: 1.5em;
+	width: 100%;
+	border-collapse: collapse;
+}
+.imageinfo:last-of-type {
+	margin-bottom: 1em;
+}
+.imageinfo th, .imageinfo td {
 	text-align: left;
 	vertical-align: top;
+	border-bottom: 1px solid #8888;
+}
+.imageinfo tbody th, .imageinfo tbody td {
+	padding: 3px 4px;
 	font-weight: normal;
 }
-#imgurl th, #imgurl td {
-	font-weight: bold;
+.imageinfo tbody th {
+	width: 110px;
+	max-width: 110px;
 }
-#previewpar {
+.imageinfo thead th {
+	padding: 0 0 3px 0;
+}
+@media screen {
+	.imageinfo {
+		border-left: 8px solid var(--table-back-color);
+	}
+	.imageinfo tbody th {
+		padding-left: 8px;
+	}
+	.imageinfo thead th {
+		padding: 0;
+	}
+	.imageinfo thead span {
+		display: inline-block;
+		padding: 3px 24px 3px 8px;
+		border-radius: 0 16px 0px 0px / 0 16px 0px 0px;
+		color: var(--table-head-color);
+		background-color: var(--table-back-color);
+	}
+	main.ver1dot8 #preview.fitw {
+		margin-top: 16px;
+	}
+}
+#previewdiv {
+	position: relative;
+}
+main.classic #previewpar {
 	text-align: center; 
 	border: 1px solid #888; 
 	padding: 8px;
 }
-#preview {
+main.classic #preview {
 	max-width: 100%;
+}
+main.ver1dot8 #previewpar {
+	margin: 8px 0 0 0;
+}
+main.ver1dot8 #preview {
+	max-width: calc(100vw - 200px);
+	max-height: 240px;
+}
+main.ver1dot8 #preview.shrinkToFit {
+	cursor: zoom-in;
+}
+main.ver1dot8 #preview.fitw {
+	max-width: 100%;
+	max-height: unset;
+	cursor: zoom-out;
 }
 #oops {
 	display: none;
@@ -106,54 +177,45 @@ body[colorscheme="dark"]{
 #popsizer {
 	display: none;
 	position: fixed;
-	right: 8px;
-	top: 8px;
+	right: 16px;
+	top: 4px;
 	padding: 0 8px;
 	width: 350px;
 	background: var(--body-back-color);
 	border: 1px solid var(--body-text-color);
 	border-radius: 6px;
+	z-index: 10;
+}
+.suboption {
+	margin-left: 22px;
 }
 /* Save As... [v1.6] */
 #imagetools {
 	position: relative;
-	height: 2em;
-}
-#btnspan {
-	position: absolute;
-	top: 0;
-	right: 0;
-}
-#previewpar {
-	margin-top: 0;
-}
-#btnsaveas {
-	font-size: var(--body-size);
-	padding: 2px 8px;
-	border: 1px solid #888;
-	color: buttontext;
-	background-color: buttonface;
 }
 #saveaslist {
 	position: absolute;
-	top: calc((1em * 1.2) + 7px);
-	right: 0;
+	top: calc((1em * 1.2) + 3px);
+	right: 4px;
 	margin: 0;
 	padding: 0;
 	list-style-type: none;
-	background-color: var(--body-back-color);
+	background-color: buttonface;
 	border: 1px solid #888;
+	border-radius: 4px;
 	border-bottom: none;
 	display: none;
+	z-index: 100;
 }
 #saveaslist li {
 	margin: 0;
 	padding: 0;
 	border-bottom: 1px solid var(--body-text-color);
+	white-space: nowrap;
 }
 #saveaslist li a {
 	display: block;
-	color: var(--body-text-color);
+	color: buttontext;
 	text-decoration: none;
 	padding: 6px 12px;
 }
@@ -165,14 +227,6 @@ body[colorscheme="dark"]{
 	color: highlight;
 	background-color: highlightText;
 }
-#btnsaveas[state="closed"] > span::after {
-	content: "▼";
-	color: var(--body-text-color);
-}
-#btnsaveas[state="open"] > span::after {
-	content: "▲";
-	color: var(--body-text-color);
-}
 #saveaslist li#saveasnoaccept a, #saveaslist li#saveasie11 a {
 	position: relative;
 	padding-right: 45px;
@@ -180,13 +234,15 @@ body[colorscheme="dark"]{
 /* Referrer controls [v1.7] */
 .btnRefer {
 	font-size: var(--body-size);
-	padding: 0 4px;
-	position: absolute;
-	right: 4px;
+	padding: 0 4px 1px;
 	border: none;
 	color: buttonface;
 	background-color: buttontext;
 	opacity: 0.5;
+}
+a > .btnRefer {
+	position: absolute;
+	right: 4px;
 }
 .btnRefer:hover {
 	opacity: 1;
@@ -203,4 +259,20 @@ input[name="radReferPolicy"] {
 }
 input[value="no-referrer"] {
 	margin-left: 0;
+}
+#previewtools {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	background-color: var(--body-back-color);
+	z-index: 100;
+	display: none;
+}
+#previewtools li {
+	margin: 0;
+	padding: 0;
+	border: 1px solid #888;
 }

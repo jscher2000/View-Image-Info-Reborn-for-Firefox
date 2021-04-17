@@ -1,5 +1,5 @@
 /* 
-  View Image Info Reborn - Page Script
+  View Image Info Reborn - Info Page Script
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
   Script to populate image data into new window/tab
   version 1.0 - MVP
@@ -11,6 +11,7 @@
   version 1.6.1 - bug fixes
   version 1.7 - Referrer
   version 1.7.1 - bug fix
+  version 1.8 - Referrer for preview, popup position option
 */
 
 let details = {};
@@ -32,20 +33,13 @@ if (timenow){
 		} else {
 			document.title = details.sourceUrl;
 		}
+		// Update layout
+		var main = document.querySelector('main');
+		if (details.previewstyle == 'classic') {
+			main.className = details.previewstyle;
+			main.appendChild(document.getElementById('previewdiv'));
+		}
 		// Populate data into the page
-		document.getElementById('pageTitle').textContent = details.pageTitle;
-		var refHref = details.pageUrl;
-		if (details.pageUrl === details.imgSrc){
-			document.getElementById('pageUrl').textContent = '(Stand Alone)';
-		} else {
-			document.getElementById('pageUrl').textContent = details.pageUrl;
-		}
-		if (details.referUrl && details.referUrl.length > 0){
-			document.getElementById('referrer').textContent = details.referUrl;
-			refHref = details.referUrl;
-		} else {
-			document.getElementById('refUrl').style.display = 'none';
-		}
 		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
 			document.getElementById('sourceUrl').textContent = details.imgSrc;
 		} else {
@@ -72,19 +66,43 @@ if (timenow){
 			document.getElementById('scaledWidth').textContent = details.scaledWidth + 'px';
 			document.getElementById('scaledHeight').textContent = details.scaledHeight + 'px';
 		}
-		document.getElementById('decodedSize').textContent = (+(Math.round(details.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + details.decodedSize + ')';
-		if (details.altText){
-			document.getElementById('altText').textContent = details.altText;
-		} else {
-			document.getElementById('alt').style.display = 'none';
-		}
-		if (details.titleText){
-			document.getElementById('titleText').textContent = details.titleText;
-		} else {
-			document.getElementById('title').style.display = 'none';
+		if (details.decodedSize){
+			document.getElementById('decodedSize').textContent = (+(Math.round(details.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + details.decodedSize.toLocaleString() + ')';
 		}
 		if (details.lastModified && details.lastModified.length > 0){
 			document.getElementById('lastMod').textContent = details.lastModified;
+		}
+
+		// Build attributes table rows [v1.8]
+		var arrAtt = JSON.parse(details.attribJSON);
+		// Clone and populate templated row
+ 		var newTR = document.getElementById('new2cellrow'), clone, cells, dest = document.getElementById('tbattributes');
+		for (var j=0; j<arrAtt.length; j++){
+			clone = document.importNode(new2cellrow.content, true);
+			cells = clone.querySelectorAll('tr>th, tr>td');
+			cells[0].textContent = arrAtt[j].attrname;
+			cells[1].textContent = '"' + arrAtt[j].attrvalue + '"';
+			dest.appendChild(clone);
+		}
+		
+		// Populate context table
+		document.getElementById('pageTitle').textContent = details.pageTitle;
+		var refHref = details.pageUrl;
+		if (details.pageUrl === details.imgSrc){
+			document.getElementById('pageUrl').textContent = '(Stand Alone)';
+		} else {
+			document.getElementById('pageUrl').textContent = details.pageUrl;
+		}
+		if (details.referUrl && details.referUrl.length > 0){
+			document.getElementById('referrer').textContent = details.referUrl;
+			refHref = details.referUrl;
+		} else {
+			document.getElementById('refUrl').style.display = 'none';
+		}
+		if (details.ahref && details.ahref.length > 0){
+			document.getElementById('ahref').textContent = details.ahref;
+		} else {
+			document.getElementById('linkhref').style.display = 'none';
 		}
 		var dtNow = new Date(details.now);
 		document.getElementById('localTime').textContent = dtNow.toDateString() + ' ' + dtNow.toLocaleTimeString();
@@ -92,10 +110,15 @@ if (timenow){
 		// Load the image
 		var img = document.getElementById('preview');
 		img.onerror = function(event){
-			document.querySelector('#oops span').textContent = 'Image did not load, possibly due to lack of credentials or referring host name.';
+			document.querySelector('#oops span').textContent = 'Image did not load, possibly due to lack of credentials or missing referrer.';
 			document.getElementById('oops').style.display = 'block';
+			document.getElementById('previewtools').style.display = 'inline-block';
 		};
 		img.onload = function(event){
+			// remove height and width attributes
+			var img = event.target;
+			img.removeAttribute('height');
+			img.removeAttribute('width');
 			// fill in missing size info when that happens (url's sometimes vary) [v1.4]
 			if (!details.decodedSize && window.performance){
 				var resos = performance.getEntriesByType('resource');
@@ -104,9 +127,12 @@ if (timenow){
 				if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(details.imgSrc) > -1);
 				if (perfrec && perfrec.decodedBodySize > 0){
 					details.decodedSize = perfrec.decodedBodySize;
-					document.getElementById('decodedSize').textContent = (+(Math.round(details.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + details.decodedSize + ')';
+					document.getElementById('decodedSize').textContent = (+(Math.round(details.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + details.decodedSize.toLocaleString() + ')';
 				}
 			}
+			// check zoom-ability [v1.8]
+			if (img.height != img.naturalHeight && details.previewstyle == 'topthumb') img.className = 'shrinkToFit';
+			else if(img.height != img.naturalHeight && details.previewstyle == 'topfitw') img.className = 'fitw';
 		};
 		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
 			var url = new URL(details.imgSrc);
@@ -157,26 +183,49 @@ document.getElementById('btnprint').addEventListener('click', function(evt){
 document.getElementById('btnclose').addEventListener('click', function(evt){
 	evt.target.parentNode.style.display = '';
 }, false);
+document.getElementById('preview').addEventListener('click', function(evt){
+	var img = evt.target;
+	if (img.className == 'shrinkToFit') img.className = 'fitw';
+	else if (img.className == 'fitw') img.className = 'shrinkToFit';
+}, false);
 
-// Popup window sizing [v1.5]
+
+// Popup window sizing [v1.5] [position v1.8]
 function updateWH(evt){
 	document.getElementById('currwidth').textContent = window.outerWidth + 'px';
 	document.getElementById('currheight').textContent = window.outerHeight + 'px';
+	document.getElementById('currleft').textContent = window.screenX + 'px';
+	document.getElementById('currtop').textContent = window.screenY + 'px';
 }
+function updateLT(evt){
+	document.getElementById('currleft').textContent = window.screenX + 'px';
+	document.getElementById('currtop').textContent = window.screenY + 'px';
+}
+
+var poscheck;
 document.getElementById('showresize').addEventListener('click', function(evt){
 	updateWH();
 	var frm = document.getElementById('popsizer');
 	if (details.popwidth == 'auto'){
 		frm.radSizing.value = 'auto';
+		frm.custposition.checked = false;
 	} else {
 		frm.radSizing.value = 'capture';
+		if (details.popleft != 'auto'){
+			frm.custposition.checked = true;
+		} else {
+			frm.custposition.checked = false;
+		}
 	}
 	frm.style.display = 'block';
 	window.addEventListener('resize', updateWH, false);
+	poscheck = window.setInterval(updateLT, 200);
 }, false);
+
 document.getElementById('btnSave').addEventListener('click', function(evt){
-	// Remove the resize event handler
+	// Remove the resize event handler and interval
 	window.removeEventListener('resize', updateWH, false);
+	window.clearInterval(poscheck);
 	// Update image details and build updater object
 	var frm = document.getElementById('popsizer');
 	if (frm.radSizing.value == 'auto'){
@@ -184,7 +233,9 @@ document.getElementById('btnSave').addEventListener('click', function(evt){
 		details.popheight = 'auto';
 		var sizeupdate = {
 			popwidth: 'auto',	// width for popup window
-			popheight: 'auto'	// height for popup window
+			popheight: 'auto',	// height for popup window
+			poptop: 'auto',		// top for popup window
+			popleft: 'auto'		// left for popup window
 		}
 	} else {
 		details.popwidth = window.outerWidth + 'px';
@@ -192,6 +243,19 @@ document.getElementById('btnSave').addEventListener('click', function(evt){
 		var sizeupdate = {
 			popwidth: details.popwidth,		// width for popup window
 			popheight: details.popheight	// height for popup window
+		}
+		if (frm.custposition.checked == true){
+			details.poptop = window.screenY + 'px';
+			details.popleft = window.screenX + 'px';
+		} else {
+			details.poptop = 'auto';
+			details.popleft = 'auto';
+		}
+		var sizeupdate = {
+			popwidth: details.popwidth,		// width for popup window
+			popheight: details.popheight,	// height for popup window
+			poptop: details.poptop,			// top for popup window
+			popleft: details.popleft		// left for popup window
 		}
 	}
 	// Send message to background to update storage
@@ -204,6 +268,7 @@ document.getElementById('btnSave').addEventListener('click', function(evt){
 	// Close the overlay
 	document.getElementById('popsizer').style.display = '';
 }, false);
+
 document.getElementById('btnCancel').addEventListener('click', function(evt){
 	// Remove the resize event handler
 	window.removeEventListener('resize', updateWH, false);
@@ -330,9 +395,44 @@ document.getElementById('referForm').addEventListener('change', function(evt){
 			if (pos > -1) linkAsIE11.href = linkAsIE11.href.slice(0, pos) + '&viirreferrer=' + encodeURIComponent(ref);
 			else linkAsIE11.href += '&viirreferrer=' + encodeURIComponent(ref);
 		}
+		// If directed to the preview, re-request the image
+		if (tgt.closest('ul').id == 'previewtools'){
+			updatePreview(ref);
+		}
 	}
 }, false);
 
+function updatePreview(refUrl){		// [v1.8]
+	var img = document.getElementById('preview');
+	img.onerror = function(event){
+		document.querySelector('#oops span').textContent = 'Image did not load, possibly due to lack of credentials or referring host name.';
+		document.getElementById('oops').style.display = 'block';
+	};
+	img.onload = function(event){
+		document.getElementById('oops').style.display = '';
+		// remove height and width attributes
+		var img = event.target;
+		img.removeAttribute('height');
+		img.removeAttribute('width');
+		// check zoom-ability [v1.8]
+		if (img.height != img.naturalHeight && details.previewstyle == 'topthumb') img.className = 'shrinkToFit';
+		else if(img.height != img.naturalHeight && details.previewstyle == 'topfitw') img.className = 'fitw';
+	};
+	var url = new URL(img.src);
+	var searcharray = url.search.slice(1).split('&');
+	if (searcharray.length == 2 && refUrl.length > 0){				// add Referer
+		url.search += '&viirreferrer=' + encodeURIComponent(refUrl);
+	} else if (searcharray.length == 3 && refUrl.length == 0) {		// remove Referer
+		searcharray.pop();
+		url.search = '?' + searcharray.join('&');
+	} else if (searcharray.length == 3 && refUrl.length > 0) {		// update Referer
+		searcharray[2] = 'viirreferrer=' + encodeURIComponent(refUrl);
+		url.search = '?' + searcharray.join('&');
+	} else {
+		console.log('Unexpected url.search and searcharray: ', url.search, searcharray);
+	}
+	img.src = url.href;
+}
 
 /**** Handle Requests from Background script ****/
 let moredetails = {};

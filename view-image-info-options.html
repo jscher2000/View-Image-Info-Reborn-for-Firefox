@@ -2,13 +2,16 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Options for View Image Info Reborn 1.5</title>
+<title>Options for View Image Info Reborn 1.8</title>
 <style>
 body {margin: 8px 16px; background-color: #dff; font-size: 16px;}
 h1, h2 {position: relative; margin-bottom: 0;}
 h1 {margin-top: 4px;}
 .savebtn {position: absolute; top: 0; left: 420px; margin-top: 8px;}
+#savepos, #resizeexplain {display: none;}
 input[disabled] + span { opacity: 0.5; }
+input[disabled] + span + #resizeexplain { display: inline; }
+.changed { background-color: #ff0; }
 </style>
 </head>
 <body>
@@ -34,21 +37,30 @@ input[disabled] + span { opacity: 0.5; }
 		</select></label> *<em>on Mac, Command+click</em></p>
 </section>
 <section>
-	<h2>Other Options<button type="button" id="btnSave1" class="savebtn">Save Changes</button></h2>
+	<h2>Popup Options<button type="button" id="btnSave1" class="savebtn">Save Changes</button></h2>
 	<p>Color scheme and font size:</p>
 		<p class="rad"><label><input type="radio" name="radColors" value="auto"> Automatic</label><br> 
 		<label><input type="radio" name="radColors" value="light"> Light background</label><br> 
 		<label><input type="radio" name="radColors" value="dark"> Dark background</label></p>
-		<p><label>Info text: <select name="fontsize">
+		<p><label>Info text size: <select name="fontsize">
 			<option value="size12">12px</option>
 			<option value="size13">13px</option>
 			<option value="size14">14px</option>
 			<option value="size15">15px</option>
 			<option value="size16">16px</option>
 		</select></label>
-	<p>Popup window and tab options:</p>
-		<p class="rad"><label><input type="radio" name="radSizing" value="auto"> Automatic (let Firefox decide)</label><br>
-	   <label><input type="radio" name="radSizing" value="capture"><span> Retain last custom size saved from the popup (<span id="currwidth"></span> × <span id="currheight"></span>)</span></label></p>
+	<p>Layout and sizing:</p>
+		<p class="rad"><label><input type="radio" name="radPreview" value="topthumb"> Preview thumbnail above</label><br> 
+		<label><input type="radio" name="radPreview" value="topfitw"> Preview above up to available width</label><br> 
+		<label><input type="radio" name="radPreview" value="classic"> Preview below (classic style)</label></p>
+		<p class="rad"><label><input type="radio" name="radSizing" value="auto"> Automatic (let Firefox decide window size and position)</label><br>
+		<label><input type="radio" name="radSizing" value="capture"><span> Retain last custom size saved from the popup (<span id="currwidth"></span> × <span id="currheight"></span>)<span id="savepos"><br> 
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(and position <span id="currleft"></span> @ <span id="currtop"></span>)</span></span><span id="resizeexplain"><br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>Use the ↔ button in the popup to set a custom size</em></span></label></p>
+</section>
+<section>
+	<h2>Other Options<button type="button" id="btnSave2" class="savebtn">Save Changes</button></h2>
+	<p>Tab viewing options:</p>
 		<p class="chk"><label><input type="checkbox" name="tabinback"> Open tab in the background</label></p>
 <!--
 	<p>Automatic display:</p>

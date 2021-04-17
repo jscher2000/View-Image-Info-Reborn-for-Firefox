@@ -3,39 +3,21 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="view-image-info-page.css" type="text/css">
-<title>View Image Info Reborn 1.7</title>
+<title>View Image Info Reborn 1.8</title>
 </head>
 <body>
 <header>
-	<span id="controls"><button id="options" type="button" title="Open Options page">⚙️</button> <button id="showresize" type="button" title="Show/Hide Resizer">↔</button> <button id="btnprint" type="button" title="Print" style="filter:grayscale(1);">🖨️</button></span>
-</header>
-<main>
-	<table id="imageinfo"><tbody>
-		<tr><th>Page Title: </th><td><span id="pageTitle"></span></td></tr>
-		<tr><th>Page URL: </th><td><span id="pageUrl"></span></td></tr>
-		<tr id="refUrl"><th>Referring URL: </th><td><span id="referrer"></span></td></tr>
-	</tbody><tbody>
-		<tr id="imgurl"><th>Image URL: </th><td><span id="sourceUrl"></span></td></tr>
-		<tr id="fname"><th title="filename parameter provided by the server in the Content-Disposition header">Suggested Name: </th><td><span id="fileName"><span></td></tr>
-		<tr><th title="Last part of the Content-Type header provided by the server">Image Type: </th><td><span id="mimeType">(Unconfirmed)</span></td></tr>
-		<tr><th>Dimensions: </th><td><span id="naturalWidth"></span> × <span id="naturalHeight"></span><span id="scaled"> (scaled to <span id="scaledWidth"></span> × <span id="scaledHeight"></span>)</span></td></tr>
-		<tr><th title="Retrieved using the window.performance() API, decodedBodySize property">Image Size: </th><td><span id="decodedSize"></span></td></tr>
-		<tr id="alt"><th title="Value of alt attribute set in the img tab">Alt Text: </th><td><span id="altText"><span></td></tr>
-		<tr id="title"><th title="Value of title attribute set in the img tab">Title Text: </th><td><span id="titleText"><span></td></tr>
-		<tr id="modified"><th title="Value of Last-Modified header provided by the server">Last Modified: </th><td><span id="lastMod"></span></td></tr>
-	</tbody></table>
-	<p id="oops"><span></span><button id="btnclose" type="button" title="Close">X</button></p>
-	<div id="saveandpreview">
-		<div id="imagetools">
+	<span id="controls">
+		<span id="imagetools">
 			<span id="btnspan">
-				<button id="btnsaveas" type="button" state="closed">Save As... Options <span></span></button>
+				<button id="btnsaveas" type="button" title="Download Image" state="closed">🡇</button>
 			</span>
 			<ul id="saveaslist">
 				<li id="saveasserved"><a href="">Save "as served" <span id="defaultmime"></span></a></li>
 				<li id="saveasnoaccept"><a href="">Request without image/webp <button class="btnRefer" title="Do not add a Referer header">NR</button></a></li>
 				<li id="saveasie11"><a href="">Request as IE 11 <button class="btnRefer" title="Do not add a Referer header">NR</button></a></li>
 				<li id="saveaspng"><a href="" download="">Convert to PNG (via canvas)</a></li>
-				<li id="saveasjpg"><a href="" download="">Convert to JPEG (via canvas)</a></li>
+				<li id="saveasjpg"><a href="" download="">Convert to JPEG (via canvas)</a></li><!-- TODO: Save as data URI in stand-alone or brief summary image page -->
 			</ul>
 			<form id="referForm" action="">
 				<p>If server requires referring URL<br>
@@ -43,16 +25,51 @@
 				   <label title="Set Referer header to: _ORIGIN_"><input type="radio" name="radReferPolicy" value="origin-only">Origin</label> 
 				   <label title="Set Referer header to: _ORIGINPATH_"><input type="radio" name="radReferPolicy" value="origin-path">Origin/Path</label></p>
 			</form>
-		</div>
-		<p id="previewpar"><img id="preview" src="" style=""></p>
+		</span>
+	<button id="btnprint" type="button" title="Print" style="filter:grayscale(1);">🖨️</button> 
+	<button id="showresize" type="button" title="Show/Hide Resizer">↔</button> 
+	<button id="options" type="button" title="Open Options page">⚙️</button></span>
+</header>
+<main class="ver1dot8">
+	<p id="oops"><span></span><button id="btnclose" type="button" title="Close">X</button></p>
+	<div id="previewdiv">
+		<p id="previewpar"><img id="preview" src="" style="" height="240" width="320"></p>
+		<ul id="previewtools"><li><button class="btnRefer" title="Do not add a Referer header">NR</button></li></ul>
 	</div>
-	<p><em>Information captured:</em> <span id="localTime"></span></p>
+	<table class="imageinfo"><thead>
+		<th colspan="2"><span>Properties</span></th>
+	</thead><tbody>
+		<tr id="imgurl"><th>Image URL: </th><td><span id="sourceUrl"></span></td></tr>
+		<tr id="fname"><th title="filename parameter provided by the server in the Content-Disposition header">C-D filename: </th><td><span id="fileName"><span></td></tr>
+		<tr><th title="Last part of the Content-Type header provided by the server">Image Type: </th><td><span id="mimeType">(Unconfirmed)</span></td></tr>
+		<tr><th>Dimensions: </th><td><span id="naturalWidth"></span> × <span id="naturalHeight"></span><span id="scaled"> (scaled to <span id="scaledWidth"></span> × <span id="scaledHeight"></span>)</span></td></tr>
+		<tr><th title="Retrieved using the window.performance() API, decodedBodySize property">Image Size: </th><td><span id="decodedSize"></span></td></tr>
+		<tr id="modified"><th title="Value of Last-Modified header provided by the server">Last Modified: </th><td><span id="lastMod"></span></td></tr>
+	</tbody></table>
+	<table class="imageinfo"><thead>
+		<th colspan="2"><span>&lt;img&gt; Attributes</span></th>
+	</thead><tbody id="tbattributes">
+	</tbody></table>
+	<table class="imageinfo"><thead>
+		<th colspan="2"><span>Context</span></th>
+	</thead><tbody>
+		<tr><th>Page Title: </th><td><span id="pageTitle"></span></td></tr>
+		<tr><th>Page URL: </th><td><span id="pageUrl"></span></td></tr>
+		<tr id="refUrl"><th>Referer: </th><td><span id="referrer"></span></td></tr>
+		<tr id="linkhref"><th>In Link to: </th><td><span id="ahref"></span></td></tr>
+		<tr><th>Analyzed: </th><td><span id="localTime"></span></td></tr>
+	</tbody></table>
 </main>
 <form id="popsizer" action="#" onsubmit="return false">
 	<p>Popup window sizing:<p>
 	<p><label><input type="radio" name="radSizing" value="auto"> Automatic (let Firefox decide)</label><br>
-	   <label><input type="radio" name="radSizing" value="capture"> Set from this window (<span id="currwidth"></span> × <span id="currheight"></span>)</label></p>
+	   <label><input type="radio" name="radSizing" value="capture"> Set from this window (<span id="currwidth"></span> × <span id="currheight"></span>)</label><br>
+	   <label class="suboption"><input type="checkbox" name="custposition"> Also save position (<span id="currleft"></span> @ <span id="currtop"></span>)</label></p>
 	<p><button type="button" id="btnSave">Save</button> <button type="button" id="btnCancel">Cancel</button></p>
 </form>
 <script type="text/javascript" src="view-image-info-page.js"></script>
 </body>
+<template id="new2cellrow">
+	<tr><th></th><td></td></tr>
+</template>
+</html>

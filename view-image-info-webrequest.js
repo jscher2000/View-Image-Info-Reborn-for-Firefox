@@ -9,6 +9,7 @@
   version 1.6 - Save As options
   version 1.6.1 - bug fixes
   version 1.7 - Referrer
+  version 1.8 - Referrer for preview, popup position option
 */
 
 /**** Report Headers of Intercepted Responses ****/
@@ -124,11 +125,29 @@ function doRedirect(requestDetails){
 					url.search = '?' + searcharray.join('&');
 				}
 			}
+			if (srch.indexOf('viirreferrer=') > -1){		// Set Referer for preview image
+				var refInfo = searcharray.find((element) => element.indexOf('viirreferrer=') > -1);
+				if (searcharray.length == 1){
+					url.search = '';
+				} else {
+					var viirIndex = searcharray.findIndex((element) => element.indexOf('viirreferrer=') > -1);
+					if (viirIndex > -1) {
+						searcharray.splice(viirIndex, 1);
+						url.search = '?' + searcharray.join('&');
+					}
+				}
+				var oRef = {
+					imgUrl: url.href,
+					refUrl: refInfo.split('=')[1]
+				};
+				wrTasks.modReferer.push(oRef);
+				wrTasks.onBefSendHead.push(url.href);		// To modify Referer
+			}
 			wrTasks.modNoCacheOnly.push(url.href);		// To modify Cache-Control
 			wrTasks.onHeadRecd.push(url.href);			// To modify Cache-Control
 		}
 
-		if (srch.indexOf('viirreferrer=') > -1){		// Set Referer (this supplements either modAccept or modUA)
+		if (srch.indexOf('viirreferrer=') > -1 && srch.indexOf('viirnocache=') < 0){	// Set Referer (this supplements either modAccept or modUA)
 			var refInfo = searcharray.find((element) => element.indexOf('viirreferrer=') > -1);
 			var oRef = {
 				imgUrl: null,

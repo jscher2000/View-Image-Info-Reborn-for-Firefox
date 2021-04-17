@@ -9,6 +9,7 @@
   version 1.5.1 - add Last-Modified
   version 1.5.2 - bug fix for Size
   version 1.6 - Save As options
+  version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
 */
 
 /**** Handle Requests from Background script ****/
@@ -50,11 +51,22 @@ function handleMessage(request, sender, sendResponse){
 					moredetails.transferTime = imgp[0].duration;
 				}
 			}
-			moredetails.altText = null;
-			if (el.getAttribute('alt') && el.getAttribute('alt').trim().length > 0) moredetails.altText = el.getAttribute('alt');
-			moredetails.titleText = null;
-			if (el.getAttribute('title') && el.getAttribute('title').trim().length > 0) moredetails.titleText = el.getAttribute('title');
-			
+			// Store alphabetized array of <img> attributes [v1.8]
+			var arrAtt = [];
+			var elAtt = el.attributes;
+			for (var i=0; i<elAtt.length; i++){
+				arrAtt.push({
+					attrname: elAtt[i].name,
+					attrvalue: elAtt[i].value
+				});
+			}
+			arrAtt.sort((a, b) => a.attrname.toLowerCase() < b.attrname.toLowerCase() ? -1 : (a.attrname.toLowerCase() > b.attrname.toLowerCase() ? 1 : 0));
+			moredetails.attribJSON = JSON.stringify(arrAtt);
+			// Check for parent link [v1.8]
+			var ahref = '';
+			var ael = el.closest('a');
+			if (ael && ael.href) ahref = ael.href;
+			moredetails.ahref = ahref;
 			// Send updated details to background
 			browser.runtime.sendMessage({
 				showinfo: moredetails
@@ -123,8 +135,8 @@ function handleMessage(request, sender, sendResponse){
 				td = document.createElement('td');
 				th.textContent = 'Image Size: ';
 				td.id = 'decodedSize-' + moredetails.now;
-				var sz = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.decodedSize + ')';
-				if (moredetails.transferSize > 0) sz += ' (transferred ' + (+(Math.round(moredetails.transferSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.transferSize + ') in ' +  (+(Math.round(moredetails.transferTime/1000 + 'e+2')  + 'e-2')) + ' seconds)';
+				var sz = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.decodedSize.toLocaleString() + ')';
+				if (moredetails.transferSize > 0) sz += ' (transferred ' + (+(Math.round(moredetails.transferSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.transferSize.toLocaleString() + ') in ' +  (+(Math.round(moredetails.transferTime/1000 + 'e+2')  + 'e-2')).toLocaleString() + ' seconds)';
 				td.textContent = sz;
 				row.appendChild(th);
 				row.appendChild(td);
@@ -212,7 +224,7 @@ function handleMessage(request, sender, sendResponse){
 						if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.imgSrc) > -1);
 						if (perfrec && perfrec.decodedBodySize > 0){
 							moredetails.decodedSize = perfrec.decodedBodySize;
-							document.getElementById('decodedSize-' + moredetails.now).textContent = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')) + ' KB (' + moredetails.decodedSize + ')';
+							document.getElementById('decodedSize-' + moredetails.now).textContent = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.decodedSize.toLocaleString() + ')';
 						}
 					}
 					imgTest.remove();
@@ -226,7 +238,7 @@ function handleMessage(request, sender, sendResponse){
 				imgTest.src = url.href;
 			}
 		} else {
-			window.alert('Wasn\'t able to determine where you right-clicked!');
+			window.alert('Wasn\'t able to determine where you right-clicked??');
 		}
 	} else if ('headerdetails' in request){
 		// Update mimeType
