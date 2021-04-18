@@ -12,7 +12,7 @@ Context menu can display the information in different ways. Use the Options page
 
 By default, you get a new window with the usual details.
 
-![Image of popup info page](screenshots/window_1.8.png)
+![Image of popup info page](screenshots/window_1.8.1.png)
 
 If you choose to overlay the information onto the image, the details are more compact.
 
