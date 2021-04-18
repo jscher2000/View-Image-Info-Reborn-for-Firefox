@@ -10,6 +10,7 @@
   version 1.6.1 - bug fixes
   version 1.7 - Referrer
   version 1.8 - Referrer for preview, popup position option
+  version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc
 */
 
 /**** Report Headers of Intercepted Responses ****/
@@ -17,7 +18,8 @@
 function reportHeaders(details) {
 	// Only pay attention to requests on the watchlist
 	var req = watchlist.find(objRequest => objRequest.url.toLowerCase() === details.url.toLowerCase());
-	if (!req) req = watchlist.find(objRequest => objRequest.contentSrcUrl.toLowerCase() === details.url.toLowerCase());
+	if (!req) req = watchlist.find(objRequest => objRequest.currentSrcUrl.toLowerCase() === details.url.toLowerCase());
+	if (!req) req = watchlist.find(objRequest => objRequest.imgSrcUrl.toLowerCase() === details.url.toLowerCase());
 	if (req){
 		// Store the Content-Type and Content-Disposition headers if present
 		for (let header of details.responseHeaders) {

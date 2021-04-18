@@ -9,6 +9,7 @@
   version 1.5 - add Last-Modified, window/tab options
   version 1.6 - Save As options
   version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
+  version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, check for picture tag
 */
 
 /**** Create and populate data structure ****/
@@ -57,6 +58,7 @@ browser.menus.create({
 
 // Kick off info display with a message to the content script
 let watchlist = [];
+var injectedFrames = [];
 browser.menus.onClicked.addListener((menuInfo, currTab) => {
 	if (currTab.url.indexOf('moz-extension:') == 0 && currTab.url.indexOf('moz-extension:') > -1){
 		// No recursion, please!
@@ -110,14 +112,15 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 		imgmsg.popleft = oPrefs.popleft;
 		imgmsg.previewstyle = oPrefs.previewstyle;
 		imgmsg.autoopen = oPrefs.autoopen;
-		// Add to array
-		pops.push(imgmsg);
+		// Add to array (at beginning, so .find/.findIndex gets the latest match)
+		pops.unshift(imgmsg);
 		
 		// Update watchlist for header interception
-		watchlist.push({
+		watchlist.unshift({
 			id: imgmsg.now,
 			url: imgmsg.sourceUrl,
-			contentSrcUrl: '',
+			currentSrcUrl: '',
+			imgSrcUrl: '',
 			fileName: '',
 			lastMod: '',
 			done: false
@@ -130,27 +133,36 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 				{"getdetails": imgmsg}
 			);
 		} else { //need to inject CSS and execute script in this frame first before sending the message
-			var styling = browser.tabs.insertCSS({
-				frameId: menuInfo.frameId,
-				file: 'view-image-info-content.css'
-			});
-			styling.then(() => {
-				var executing = browser.tabs.executeScript({
+			if (injectedFrames.indexOf(menuInfo.frameId) < 0){
+				injectedFrames.push(menuInfo.frameId);
+				var styling = browser.tabs.insertCSS({
 					frameId: menuInfo.frameId,
-					file: 'view-image-info-content.js'
+					file: 'view-image-info-content.css'
 				});
-				executing.then(() => {
-					browser.tabs.sendMessage(
-						currTab.id,
-						{"getdetails": imgmsg},
-						{frameId: menuInfo.frameId}
-					);
+				styling.then(() => {
+					var executing = browser.tabs.executeScript({
+						frameId: menuInfo.frameId,
+						file: 'view-image-info-content.js'
+					});
+					executing.then(() => {
+						browser.tabs.sendMessage(
+							currTab.id,
+							{"getdetails": imgmsg},
+							{frameId: menuInfo.frameId}
+						);
+					}).catch((err) => {
+						console.log(err);
+					});
 				}).catch((err) => {
 					console.log(err);
 				});
-			}).catch((err) => {
-				console.log(err);
-			});
+			} else {
+				browser.tabs.sendMessage(
+					currTab.id,
+					{"getdetails": imgmsg},
+					{frameId: menuInfo.frameId}
+				);
+			}
 		}
 	}
 })
@@ -178,14 +190,16 @@ function handleMessage(request, sender, sendResponse){
 			oImgInfo.transferTime = oContentInfo.transferTime;
 			oImgInfo.attribJSON = oContentInfo.attribJSON;
 			oImgInfo.ahref = oContentInfo.ahref;
+			oImgInfo.picsrc = oContentInfo.picsrc;
 			oImgInfo.mimeType = oContentInfo.mimeType;
 			oImgInfo.fileName = '';
 			oImgInfo.lastModified = '';
 
 			// Check for image URL discrepancy and update watchlist item if needed [v1.3]
-			if (oImgInfo.imgSrc != oImgInfo.sourceUrl){
+			if (oImgInfo.currentSrc != oImgInfo.sourceUrl || oImgInfo.imgSrc != oImgInfo.sourceUrl){
 				var watchitem = watchlist.find(objRequest => objRequest.id === parseInt(oContentInfo.now));
-				watchitem.contentSrcUrl = oImgInfo.imgSrc;
+				watchitem.currentSrcUrl = oImgInfo.currentSrc;
+				watchitem.imgSrcUrl = oImgInfo.imgSrc;
 			}
 
 			// Finally time to display it

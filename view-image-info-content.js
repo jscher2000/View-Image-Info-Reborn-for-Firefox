@@ -10,6 +10,7 @@
   version 1.5.2 - bug fix for Size
   version 1.6 - Save As options
   version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
+  version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, check for picture tag
 */
 
 /**** Handle Requests from Background script ****/
@@ -17,7 +18,7 @@ let moredetails = {};
 function handleMessage(request, sender, sendResponse){
 	// Collect image and page info
 	if ('getdetails' in request){
-		var moredetails = request.getdetails;
+		moredetails = request.getdetails;
 		var el = browser.menus.getTargetElement(moredetails.targetElementId);
 		if (el){
 			moredetails.pageUrl = location.href;
@@ -42,8 +43,8 @@ function handleMessage(request, sender, sendResponse){
 			moredetails.transferSize = null;
 			moredetails.transferTime = null;
 			if (window.performance){
-				var imgp = performance.getEntriesByName(moredetails.sourceUrl);
-				if (!imgp) imgp = performance.getEntriesByName(moredetails.currentSrc);
+				var imgp = performance.getEntriesByName(moredetails.currentSrc);
+				if (!imgp) imgp = performance.getEntriesByName(moredetails.sourceUrl);
 				if (!imgp) imgp = performance.getEntriesByName(moredetails.imgSrc);
 				if (imgp && imgp.length > 0 && imgp[0].decodedBodySize > 0){
 					moredetails.decodedSize = imgp[0].decodedBodySize;
@@ -67,6 +68,26 @@ function handleMessage(request, sender, sendResponse){
 			var ael = el.closest('a');
 			if (ael && ael.href) ahref = ael.href;
 			moredetails.ahref = ahref;
+			// Check for parent picture element [v1.8.1]
+			var picturesrc = [];
+			var pict = el.closest('picture');
+			if (pict){
+				var psrcs = pict.querySelectorAll('source');
+				for (var i=0; i<psrcs.length; i++){
+					var psrcitem = {
+						srcset: '',
+						media: ''
+					};
+					if(psrcs[i].srcset){
+						psrcitem.srcset = psrcs[i].srcset;
+					}
+					if(psrcs[i].media){
+						psrcitem.media = psrcs[i].media;
+					}
+					picturesrc.push(psrcitem);
+				}
+			}
+			moredetails.picsrc = JSON.stringify(picturesrc);
 			// Send updated details to background
 			browser.runtime.sendMessage({
 				showinfo: moredetails
@@ -88,7 +109,10 @@ function handleMessage(request, sender, sendResponse){
 				var td = document.createElement('td');
 				th.textContent = 'Image URL: ';
 				var lnk = document.createElement('a');
-				if (moredetails.imgSrc != moredetails.sourceUrl){
+				if (moredetails.currentSrc != ''){
+					lnk.href = moredetails.currentSrc;
+					lnk.textContent = moredetails.currentSrc;
+				} else if (moredetails.imgSrc != ''){
 					lnk.href = moredetails.imgSrc;
 					lnk.textContent = moredetails.imgSrc;
 				} else {
@@ -135,8 +159,11 @@ function handleMessage(request, sender, sendResponse){
 				td = document.createElement('td');
 				th.textContent = 'Image Size: ';
 				td.id = 'decodedSize-' + moredetails.now;
-				var sz = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.decodedSize.toLocaleString() + ')';
-				if (moredetails.transferSize > 0) sz += ' (transferred ' + (+(Math.round(moredetails.transferSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.transferSize.toLocaleString() + ') in ' +  (+(Math.round(moredetails.transferTime/1000 + 'e+2')  + 'e-2')).toLocaleString() + ' seconds)';
+				sz = '(Unconfirmed)';
+				if (moredetails.decodedSize){
+					var sz = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.decodedSize.toLocaleString() + ')';
+					if (moredetails.transferSize > 0) sz += ' (transferred ' + (+(Math.round(moredetails.transferSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.transferSize.toLocaleString() + ') in ' +  (+(Math.round(moredetails.transferTime/1000 + 'e+2')  + 'e-2')).toLocaleString() + ' seconds)';
+				}
 				td.textContent = sz;
 				row.appendChild(th);
 				row.appendChild(td);
@@ -219,8 +246,8 @@ function handleMessage(request, sender, sendResponse){
 					// fill in missing size info when that happens (url's sometimes vary) [v1.4]
 					if (!moredetails.decodedSize && window.performance){
 						var resos = performance.getEntriesByType('resource');
-						var perfrec = resos.find(obj => obj.name.indexOf(moredetails.sourceUrl) > -1);
-						if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.currentSrc) > -1);
+						var perfrec = resos.find(obj => obj.name.indexOf(moredetails.currentSrc) > -1);
+						if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.sourceUrl) > -1);
 						if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.imgSrc) > -1);
 						if (perfrec && perfrec.decodedBodySize > 0){
 							moredetails.decodedSize = perfrec.decodedBodySize;
@@ -232,7 +259,7 @@ function handleMessage(request, sender, sendResponse){
 				imgTest.onerror = function(){
 					imgTest.remove();
 				};
-				var url = new URL(moredetails.sourceUrl);
+				var url = new URL(moredetails.currentSrc);
 				if (url.search.length == 0) url.search = '?viirnow=' + moredetails.now;
 				else url.search += '&viirnow=' + moredetails.now;
 				imgTest.src = url.href;

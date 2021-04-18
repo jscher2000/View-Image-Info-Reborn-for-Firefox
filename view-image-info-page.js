@@ -12,6 +12,7 @@
   version 1.7 - Referrer
   version 1.7.1 - bug fix
   version 1.8 - Referrer for preview, popup position option
+  version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, list picture tag sources (if any)
 */
 
 let details = {};
@@ -28,11 +29,16 @@ if (timenow){
 		// Set color scheme and font size
 		document.body.setAttribute('colorscheme', details.colorscheme);
 		document.body.setAttribute('style', '--body-size: ' + details.fontsize);
-		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
-			document.title = details.imgSrc;
+		var prefUrl = '', urlNote = '';
+		if (details.currentSrc != ''){
+			prefUrl = details.currentSrc;
+			if (details.currentSrc != details.imgSrc) urlNote = ' (currentSrc)';
+		} else if (details.imgSrc != ''){
+			prefUrl = details.imgSrc;
 		} else {
-			document.title = details.sourceUrl;
+			prefUrl = details.sourceUrl;
 		}
+		document.title = prefUrl;
 		// Update layout
 		var main = document.querySelector('main');
 		if (details.previewstyle == 'classic') {
@@ -40,11 +46,7 @@ if (timenow){
 			main.appendChild(document.getElementById('previewdiv'));
 		}
 		// Populate data into the page
-		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
-			document.getElementById('sourceUrl').textContent = details.imgSrc;
-		} else {
-			document.getElementById('sourceUrl').textContent = details.sourceUrl;
-		}
+		document.getElementById('sourceUrl').textContent = prefUrl + urlNote;
 		if (details.fileName && document.getElementById('fileName').textContent == ''){
 			document.getElementById('fileName').textContent = details.fileName;
 			document.getElementById('fname').style.display = '';
@@ -78,13 +80,15 @@ if (timenow){
 		// Clone and populate templated row
  		var newTR = document.getElementById('new2cellrow'), clone, cells, dest = document.getElementById('tbattributes');
 		for (var j=0; j<arrAtt.length; j++){
-			clone = document.importNode(new2cellrow.content, true);
-			cells = clone.querySelectorAll('tr>th, tr>td');
-			cells[0].textContent = arrAtt[j].attrname;
-			cells[1].textContent = '"' + arrAtt[j].attrvalue + '"';
-			dest.appendChild(clone);
+			if (arrAtt[j].attrvalue.length > 0){ // Skip empty attributes because... WTF
+				clone = document.importNode(new2cellrow.content, true);
+				cells = clone.querySelectorAll('tr>th, tr>td');
+				cells[0].textContent = arrAtt[j].attrname;
+				cells[1].textContent = arrAtt[j].attrvalue;
+				dest.appendChild(clone);
+			}
 		}
-		
+
 		// Populate context table
 		document.getElementById('pageTitle').textContent = details.pageTitle;
 		var refHref = details.pageUrl;
@@ -104,6 +108,16 @@ if (timenow){
 		} else {
 			document.getElementById('linkhref').style.display = 'none';
 		}
+		// If any picture tag source's, include those before the date row [v1.8.1]
+		var picsrcs = JSON.parse(details.picsrc);
+		dest = document.getElementById('tbcontext');
+		for (var j=0; j<picsrcs.length; j++){
+			clone = document.importNode(new2cellrow.content, true);
+			cells = clone.querySelectorAll('tr>th, tr>td');
+			cells[0].textContent = '<picture>';
+			cells[1].textContent = '<source srcset="' + picsrcs[j].srcset + '" media="' + picsrcs[j].media + '">';
+			dest.insertBefore(clone, dest.lastElementChild);
+		}
 		var dtNow = new Date(details.now);
 		document.getElementById('localTime').textContent = dtNow.toDateString() + ' ' + dtNow.toLocaleTimeString();
 
@@ -122,8 +136,8 @@ if (timenow){
 			// fill in missing size info when that happens (url's sometimes vary) [v1.4]
 			if (!details.decodedSize && window.performance){
 				var resos = performance.getEntriesByType('resource');
-				var perfrec = resos.find(obj => obj.name.indexOf(details.sourceUrl) > -1);
-				if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.currentSrc) > -1);
+				var perfrec = resos.find(obj => obj.name.indexOf(details.currentSrc) > -1);
+				if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(moredetails.sourceUrl) > -1);
 				if (!perfrec) perfrec = resos.find(obj => obj.name.indexOf(details.imgSrc) > -1);
 				if (perfrec && perfrec.decodedBodySize > 0){
 					details.decodedSize = perfrec.decodedBodySize;
@@ -134,11 +148,7 @@ if (timenow){
 			if (img.height != img.naturalHeight && details.previewstyle == 'topthumb') img.className = 'shrinkToFit';
 			else if(img.height != img.naturalHeight && details.previewstyle == 'topfitw') img.className = 'fitw';
 		};
-		if (details.imgSrc != details.sourceUrl && details.imgSrc != '' && details.imgSrc != details.pageUrl){
-			var url = new URL(details.imgSrc);
-		} else {
-			url = new URL(details.sourceUrl);
-		}
+		var url = new URL(prefUrl);
 		if (url.search.length == 0) url.search = '?viirnocache=' + details.now;
 		else url.search += '&viirnocache=' + details.now;
 		img.src = url.href;
