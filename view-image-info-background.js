@@ -10,6 +10,7 @@
   version 1.6 - Save As options
   version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, check for picture tag
+  version 1.9 - Menu choices, View Image in same tab
 */
 
 /**** Create and populate data structure ****/
@@ -20,6 +21,7 @@ var oPrefs = {
 	menuplain: 'window',		// open popup window
 	menushift: 'inpage',		// overlay info on image
 	menuctrl: 'intab',			// open tab
+	menustyle: 'single',		// single item or fly-out menu [v1.9]
 	/* Styling */
 	colorscheme: 'auto',		// auto / light / dark
 	fontsize: 16,				// font-size for text
@@ -28,6 +30,7 @@ var oPrefs = {
 	poptop: 'auto',				// top position for popup window [v1.8]
 	popleft: 'auto',			// left position for popup window [v1.8]
 	previewstyle: 'topthumb',	// or 'topfitw' or 'classic' for below [v1.8]
+	maxthumbheight: 240,		// pixels [v1.9]
 	tabinback: false,			// whether to open tab in the background [v1.5]
 	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
@@ -42,6 +45,8 @@ browser.storage.local.get("prefs").then( (results) => {
 			}
 		}
 	}
+}).then(() => {
+	setupMenus();
 }).catch((err) => {console.log('Error retrieving "prefs" from storage: '+err.message);});
 
 // Array of window/tab requests
@@ -50,44 +55,152 @@ let pops = [];
 /**** Menu and Overlay Stuff ****/
 
 // Right-click context menu entry
-browser.menus.create({
-	id: 'viewImageInfoReborn',
-	title: 'View Image Info...',
-	contexts: ['image']
-});
+var currentStyle;
+function setupMenus(){
+	currentStyle = oPrefs.menustyle;
+	if (oPrefs.menustyle == 'single'){			// Traditional single item
+		browser.menus.create({
+			id: 'viewImageInfoReborn',
+			title: 'View Image Info...',
+			contexts: ['image']
+		});
+	} else if (oPrefs.menustyle == 'flyout'){	// Sub-menu items [v1.9]
+		browser.menus.create({
+			id: 'viewImageInfoRebornParent',
+			title: 'View Image Info Reborn',
+			contexts: ['image']
+		});
+		browser.menus.create({
+			id: 'viir_viewImage',
+			parentId: 'viewImageInfoRebornParent',
+			title: 'View Image... in this tab',
+			contexts: ['image'],
+			"icons": {
+				"32": "img/mountain-32.png"
+			}
+		})
+		browser.menus.create({
+			id: 'viir_window',
+			parentId: 'viewImageInfoRebornParent',
+			title: 'View Image Info in New Window',
+			contexts: ['image'],
+			"icons": {
+				"32": "img/info-32.png"
+			}
+		})
+		browser.menus.create({
+			id: 'viir_tab',
+			parentId: 'viewImageInfoRebornParent',
+			title: 'View Image Info in New Tab',
+			contexts: ['image'],
+			"icons": {
+				"32": "img/info-32.png"
+			}
+		})
+		browser.menus.create({
+			id: 'viir_overlay',
+			parentId: 'viewImageInfoRebornParent',
+			title: 'View Image Info in Overlay',
+			contexts: ['image'],
+			"icons": {
+				"32": "img/info-32.png"
+			}
+		})
+		browser.menus.create({
+			id: 'viir_nowebp',
+			parentId: 'viewImageInfoRebornParent',
+			title: 'Save As... Request without image/webp',
+			contexts: ['image'],
+			"icons": {
+				"32": "img/floppydisk-32.png"
+			}
+		})
+		browser.menus.create({
+			id: 'viir_asie11',
+			parentId: 'viewImageInfoRebornParent',
+			title: 'Save As... Request as Internet Explorer 11',
+			contexts: ['image'],
+			"icons": {
+				"32": "img/floppydisk-32.png"
+			}
+		})
+		browser.menus.create({
+			id: 'viir_options',
+			parentId: 'viewImageInfoRebornParent',
+			title: 'Open the Options page',
+			contexts: ['image'],
+			"icons": {
+				"32": "img/gear-32.png"
+			}
+		})
+	}
+}
 
 // Kick off info display with a message to the content script
 let watchlist = [];
 var injectedFrames = [];
 browser.menus.onClicked.addListener((menuInfo, currTab) => {
-	if (currTab.url.indexOf('moz-extension:') == 0 && currTab.url.indexOf('moz-extension:') > -1){
+	if (menuInfo.menuItemId == 'viir_options'){
+		browser.runtime.openOptionsPage();
+		return;
+	} else if (currTab.url.indexOf('moz-extension:') == 0 && currTab.url.indexOf('moz-extension:') > -1){
 		// No recursion, please!
 		browser.tabs.sendMessage(
 			currTab.id,
-			{"oopsmsg": "View Image Info Reborn should not be called from its own popup window, and may not work in other extension pages."},
+			{"oopsmsg": "Please use the buttons in the popup window rather than the menu items. Also, View Image Info Reborn may not work in other extension pages."},
 			{frameId: menuInfo.frameId}
 		);
 	} else {
 		// Send message to the content script to gather information or show an overlay
 		var imgmsg = {};
-		// Check modifiers to determine action
 		imgmsg.axn = 'window';
-		switch (menuInfo.modifiers.length){
-			case 0: //Plain
-				imgmsg.axn = oPrefs.menuplain;
-				break;
-			case 1: // Shift or Ctrl
-				if (menuInfo.modifiers.includes('Shift')){
-					imgmsg.axn = oPrefs.menushift;
-				} else if ((browser.runtime.PlatformOs == 'mac' && menuInfo.modifiers.includes('Command')) ||
-							(browser.runtime.PlatformOs != 'mac' && menuInfo.modifiers.includes('Ctrl'))){
-					imgmsg.axn = oPrefs.menuctrl;
-				} else {
-					// What is the user trying? Show the window.
-				}
-				break;
-			default:
-				// User held down two modifier keys? Show the window.
+		// Process menu choice
+		if (menuInfo.menuItemId == 'viewImageInfoReborn'){			// Traditional single item
+			// Check modifiers to determine action
+			switch (menuInfo.modifiers.length){
+				case 0: //Plain
+					imgmsg.axn = oPrefs.menuplain;
+					break;
+				case 1: // Shift or Ctrl
+					if (menuInfo.modifiers.includes('Shift')){
+						imgmsg.axn = oPrefs.menushift;
+					} else if ((browser.runtime.PlatformOs == 'mac' && menuInfo.modifiers.includes('Command')) ||
+								(browser.runtime.PlatformOs != 'mac' && menuInfo.modifiers.includes('Ctrl'))){
+						imgmsg.axn = oPrefs.menuctrl;
+					} else {
+						// What is the user trying? Show the window.
+					}
+					break;
+				default:
+					// User held down two modifier keys? Show the window.
+			}
+		} else {													// Sub-menu [v1.9]
+			switch (menuInfo.menuItemId){
+				case 'viir_viewImage':
+					imgmsg.axn = 'viewimg';
+					break;
+				case 'viir_tab':
+					imgmsg.axn = 'intab';
+					break;
+				case 'viir_overlay':
+					imgmsg.axn = 'inpage';
+					break;
+				case 'viir_nowebp':
+					imgmsg.axn = 'reqnowebp';
+					break;
+				case 'viir_asie11':
+					imgmsg.axn = 'reqasie11';
+					break;
+				default:
+					// Show the window
+			}
+		}
+
+		if (imgmsg.axn == 'viewimg' || imgmsg.axn == 'reqnowebp' || imgmsg.axn == 'reqasie11'){		// [v1.9]
+			// build actions not related to displaying image info
+			navToImage(currTab.id, imgmsg.axn, menuInfo.srcUrl, currTab.url, menuInfo.frameUrl);
+			// don't both adding image to the pops array, etc.
+			return;
 		}
 
 		// Assemble reference information
@@ -111,6 +224,7 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 		imgmsg.poptop = oPrefs.poptop;
 		imgmsg.popleft = oPrefs.popleft;
 		imgmsg.previewstyle = oPrefs.previewstyle;
+		imgmsg.maxthumbheight = oPrefs.maxthumbheight;
 		imgmsg.autoopen = oPrefs.autoopen;
 		// Add to array (at beginning, so .find/.findIndex gets the latest match)
 		pops.unshift(imgmsg);
@@ -131,7 +245,9 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 			browser.tabs.sendMessage(
 				currTab.id,
 				{"getdetails": imgmsg}
-			);
+			).catch((err) => {
+				console.log('Error in tabs.sendMessage (main tab)', err);
+			});
 		} else { //need to inject CSS and execute script in this frame first before sending the message
 			if (injectedFrames.indexOf(menuInfo.frameId) < 0){
 				injectedFrames.push(menuInfo.frameId);
@@ -149,23 +265,77 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 							currTab.id,
 							{"getdetails": imgmsg},
 							{frameId: menuInfo.frameId}
-						);
+						).catch((err) => {
+							console.log('Error in tabs.sendMessage (frame)', err);
+						});
 					}).catch((err) => {
-						console.log(err);
+						console.log('Error in tabs.executeScript (frame)', err);
 					});
 				}).catch((err) => {
-					console.log(err);
+					console.log('Error in tabs.insertCSS (frame)', err);
 				});
 			} else {
 				browser.tabs.sendMessage(
 					currTab.id,
 					{"getdetails": imgmsg},
 					{frameId: menuInfo.frameId}
-				);
+				).catch((err) => {
+					console.log('Error in tabs.sendMessage (frame)', err);
+				});
 			}
 		}
 	}
-})
+});
+
+function navToImage(tabId, urlType, imgUrl, tabUrl, frameUrl){	// [v1.9]
+	// Update watchlist for header interception
+	var dtNow = Date.now();
+	watchlist.unshift({
+		id: dtNow,
+		url: imgUrl,
+		currentSrcUrl: '',
+		imgSrcUrl: '',
+		fileName: '',
+		lastMod: '',
+		done: false
+	});
+
+	// Compute action parameter
+	var urlAction = 'viirviewimage';
+	switch (urlType){
+		case 'reqnowebp':
+			urlAction = 'viirstripwebp';
+			break;
+		case 'reqasie11':
+			urlAction = 'viirasie11';
+			break;
+	}
+
+	// Compute View Image request URL
+	var newUrl = new URL(imgUrl);
+	if (newUrl.search.length == 0) newUrl.search = '?' + urlAction + '=' + dtNow;
+	else newUrl.search += '&' + urlAction + '=' +  + dtNow;
+
+	// Compute referrer and add to request URL
+	var refUrl = new URL((frameUrl) ? frameUrl : tabUrl);
+	if (newUrl.protocol == 'http:' && refUrl.protocol == 'https:'){
+		// No referrer on downgrade
+	} else if (newUrl.origin == refUrl.origin){
+		// Same origin: origin+path without search or hash
+		newUrl.search += '&viirreferrer=' + encodeURIComponent(refUrl.origin + refUrl.pathname);
+	} else {
+		// Cross-site: origin only
+		newUrl.search += '&viirreferrer=' + encodeURIComponent(refUrl.origin);
+	}
+
+	// Navigate in same tab
+	browser.tabs.update(
+		tabId, 
+		{
+			url: newUrl.href,
+		}
+	);
+}
 
 
 /**** Handle Requests from Content and Options ****/
@@ -320,6 +490,14 @@ function handleMessage(request, sender, sendResponse){
 							oPrefs[arrSavedPrefs[j]] = results.prefs[arrSavedPrefs[j]];
 						}
 					}
+				}
+			}).then(() => {
+				if (currentStyle != oPrefs.menustyle){
+					// Clear current menu definition and rebuild;
+					var removing = browser.menus.removeAll();
+					removing.then(() => {
+						setupMenus();
+					});
 				}
 			}).catch((err) => {console.log('Error retrieving "prefs" from storage: '+err.message);});
 		}

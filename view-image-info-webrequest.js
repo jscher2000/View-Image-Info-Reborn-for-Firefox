@@ -1,7 +1,7 @@
 /* 
   View Image Info Reborn - webRequest Background Script
   Copyright 2021. Jefferson "jscher2000" Scher. License: MPL-2.0.
-  webRequest listener to capture headings on selected image requests
+  webRequest listener to capture/tweak headings on selected image requests
   version 1.0 - MVP
   version 1.2 - bug fixes for stand-alone image pages, cache bypass for overlay
   version 1.3 - bug fixes for missing data
@@ -11,6 +11,7 @@
   version 1.7 - Referrer
   version 1.8 - Referrer for preview, popup position option
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc
+  version 1.9 - View Image in same tab
 */
 
 /**** Report Headers of Intercepted Responses ****/
@@ -149,7 +150,38 @@ function doRedirect(requestDetails){
 			wrTasks.onHeadRecd.push(url.href);			// To modify Cache-Control
 		}
 
-		if (srch.indexOf('viirreferrer=') > -1 && srch.indexOf('viirnocache=') < 0){	// Set Referer (this supplements either modAccept or modUA)
+		if (srch.indexOf('viirviewimage=') > -1){			// Use standard image Accept [v1.9]
+			if (searcharray.length == 1){
+				url.search = '';
+			} else {
+				var viirIndex = searcharray.findIndex((element) => element.indexOf('viirviewimage=') > -1);
+				if (viirIndex > -1) {
+					searcharray.splice(viirIndex, 1);
+					url.search = '?' + searcharray.join('&');
+				}
+			}
+			if (srch.indexOf('viirreferrer=') > -1){		// Set Referer for view image in same tab
+				var refInfo = searcharray.find((element) => element.indexOf('viirreferrer=') > -1);
+				if (searcharray.length == 1){
+					url.search = '';
+				} else {
+					var viirIndex = searcharray.findIndex((element) => element.indexOf('viirreferrer=') > -1);
+					if (viirIndex > -1) {
+						searcharray.splice(viirIndex, 1);
+						url.search = '?' + searcharray.join('&');
+					}
+				}
+				var oRef = {
+					imgUrl: url.href,
+					refUrl: refInfo.split('=')[1]
+				};
+				wrTasks.modReferer.push(oRef);
+			}
+			wrTasks.onBefSendHead.push(url.href);		// To modify Accept header / Referer if applicable
+			wrTasks.modAccept.push(url.href);			// To modify Accept header / Referer if applicable
+		}
+
+		if (srch.indexOf('viirreferrer=') > -1 && srch.indexOf('viirnocache=') < 0 && srch.indexOf('viirviewimage=') < 0){	// Set Referer (this supplements either modAccept or modUA)
 			var refInfo = searcharray.find((element) => element.indexOf('viirreferrer=') > -1);
 			var oRef = {
 				imgUrl: null,
@@ -260,7 +292,8 @@ var urlpatterns = [
 	"*://*/*viirnocache=*",
 	"*://*/*viirattach=*",
 	"*://*/*viirstripwebp=*",
-	"*://*/*viirasie11=*"
+	"*://*/*viirasie11=*",
+	"*://*/*viirviewimage=*"
 ];
 
 browser.webRequest.onBeforeRequest.addListener(

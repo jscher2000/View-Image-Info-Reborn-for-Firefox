@@ -13,6 +13,7 @@
   version 1.7.1 - bug fix
   version 1.8 - Referrer for preview, popup position option
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, list picture tag sources (if any)
+  version 1.9 - Thumbnail height adjustment
 */
 
 let details = {};
@@ -28,7 +29,7 @@ if (timenow){
 		details = response.renderdata;
 		// Set color scheme and font size
 		document.body.setAttribute('colorscheme', details.colorscheme);
-		document.body.setAttribute('style', '--body-size: ' + details.fontsize);
+		document.body.setAttribute('style', '--body-size: ' + details.fontsize + ';--maxthumbheight: ' + details.maxthumbheight + 'px');
 		var prefUrl = '', urlNote = '';
 		if (details.currentSrc != ''){
 			prefUrl = details.currentSrc;

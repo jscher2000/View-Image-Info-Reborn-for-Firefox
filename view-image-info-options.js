@@ -6,6 +6,7 @@
   version 1.1 - bug fix, tweaks and options for stand-alone viewing
   version 1.5 - add Last-Modified, window/tab options
   version 1.8 - Referrer for preview, popup position option, updated layout
+  version 1.9 - Menu choices, thumbnail height adjustment
 */
 
 /*** Initialize Page ***/
@@ -16,6 +17,7 @@ var oSettings = {
 	menuplain: 'window',		// open popup window
 	menushift: 'inpage',		// overlay info on image
 	menuctrl: 'intab',			// open tab
+	menustyle: 'single',		// single item or fly-out menu [v1.9]
 	/* Styling */
 	colorscheme: 'auto',		// auto / light / dark
 	fontsize: 16,				// font-size for text
@@ -24,6 +26,7 @@ var oSettings = {
 	poptop: 'auto',				// top position for popup window [v1.8]
 	popleft: 'auto',			// left position for popup window [v1.8]
 	previewstyle: 'topthumb',	// or 'topfitw' or 'classic' for below [v1.8]
+	maxthumbheight: 240,		// pixels [v1.9]
 	tabinback: false,			// whether to open tab in the background [v1.5]
 	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
@@ -39,7 +42,8 @@ browser.storage.local.get("prefs").then( (results) => {
 		}
 	}
 }).then(() => {
-	// Context menu select's
+	// Context menu style and select's
+	document.forms[0].radMenuStyle.value = oSettings.menustyle;
 	var sels = document.querySelectorAll('select[name^="menu"]');
 	for (var i=0; i<sels.length; i++){
 		var selopt = document.querySelector('select[name="' + sels[i].name + '"] option[value="' + oSettings[sels[i].name] + '"]');
@@ -53,8 +57,14 @@ browser.storage.local.get("prefs").then( (results) => {
 		var selopt = document.querySelector('select[name="' + sels[i].name + '"] option[value="size' + oSettings[sels[i].name] + '"]');
 		selopt.setAttribute('selected', 'selected');
 	}
-	// Preview position
+	// Preview position and height
 	document.forms[0].radPreview.value = oSettings.previewstyle;
+	sels = document.querySelectorAll('select[name="maxthumbheight"]');
+	for (var i=0; i<sels.length; i++){
+		var selopt = document.querySelector('select[name="' + sels[i].name + '"] option[value="' + oSettings[sels[i].name] + '"]');
+		selopt.setAttribute('selected', 'selected');
+	}
+	
 	// Popup sizing
 	if (oSettings.popwidth == 'auto'){
 		document.forms[0].radSizing.value = 'auto';
@@ -92,7 +102,8 @@ browser.storage.local.get("prefs").then( (results) => {
 // Update storage
 function updatePref(evt){
 	if (evt.target.className != 'savebtn') return;
-	// Context menu select's
+	// Context menu style and select's
+	oSettings.menustyle = document.forms[0].radMenuStyle.value;
 	var sels = document.querySelectorAll('select[name^="menu"]');
 	for (var i=0; i<sels.length; i++){
 		oSettings[sels[i].name] = sels[i].value;
@@ -104,8 +115,12 @@ function updatePref(evt){
 	for (var i=0; i<sels.length; i++){
 		oSettings[sels[i].name] = parseInt(sels[i].value.slice(4));
 	}
-	// Preview position
+	// Preview position and max thumb height 
 	oSettings.previewstyle = document.forms[0].radPreview.value;
+	sels = document.querySelectorAll('select[name="maxthumbheight"]');
+	for (var i=0; i<sels.length; i++){
+		oSettings[sels[i].name] = parseInt(sels[i].value);
+	}
 	// Popup sizing
 	if (document.forms[0].radSizing.value == 'auto'){
 		oSettings.popwidth = 'auto';
@@ -129,7 +144,7 @@ function updatePref(evt){
 		// Clean up highlighting
 		var lbls = document.querySelectorAll('label');
 		for (var i=0; i<lbls.length; i++){
-			lbls[i].style.backgroundColor = '';
+			lbls[i].className = '';
 		}
 		var btns = document.getElementsByClassName('savebtn');
 		for (i=0; i<btns.length; i++){
@@ -149,14 +164,11 @@ function lightSaveBtn(evt){
 	if (!['INPUT', 'SELECT'].includes(evt.target.nodeName)) return;
 	var chgd = false;
 	var frm = evt.target.closest('form');
-	var chgCount = frm.getAttribute('chgcount');
 	switch (evt.target.type){
 		case 'checkbox':
 			if (evt.target.checked !== oSettings[evt.target.name]){
-				chgCount++;
 				evt.target.labels[0].className = 'changed';
 			} else {
-				chgCount--;
 				evt.target.labels[0].className = '';
 			}
 			break;
@@ -174,19 +186,20 @@ function lightSaveBtn(evt){
 					if (evt.target.value == 'auto' && oSettings.popwidth != 'auto') chgd = true;
 					else chgd = false;
 					break;
+				case 'radMenuStyle':
+					if (evt.target.value != oSettings.menustyle) chgd = true;
+					else chgd = false;
+					break;
 			}
 			if (chgd){
-				chgCount++;
 				var rads = frm.querySelectorAll('input[name="' + evt.target.name + '"]');
 				for (var i=0; i<rads.length; i++){
 					if (rads[i].getAttribute('value') == evt.target.getAttribute('value')) rads[i].labels[0].className = 'changed';
 					else {
-						if (rads[i].labels[0].className == 'changed') chgCount--; // change was already counted
 						rads[i].labels[0].className = '';
 					}
 				}
 			} else {
-				chgCount--;
 				var rads = frm.querySelectorAll('input[name="' + evt.target.name + '"]');
 				for (var i=0; i<rads.length; i++){
 					rads[i].labels[0].className = '';
@@ -196,18 +209,20 @@ function lightSaveBtn(evt){
 		case 'select-one':
 			if (evt.target.name.indexOf('menu') > -1){
 				if (evt.target.value !== oSettings[evt.target.name]){
-					chgCount++;
 					evt.target.labels[0].className = 'changed';
 				} else {
-					chgCount--;
 					evt.target.labels[0].className = '';
 				}
 			} else if (evt.target.name.indexOf('fontsize') > -1){
 				if (evt.target.value !== 'size' + oSettings[evt.target.name]){
-					chgCount++;
 					evt.target.labels[0].className = 'changed';
 				} else {
-					chgCount--;
+					evt.target.labels[0].className = '';
+				}
+			} else if (evt.target.name.indexOf('maxthumbheight') > -1){
+				if (parseInt(evt.target.value) !== oSettings[evt.target.name]){
+					evt.target.labels[0].className = 'changed';
+				} else {
 					evt.target.labels[0].className = '';
 				}
 			}
@@ -215,10 +230,10 @@ function lightSaveBtn(evt){
 		default:
 			// none of these 
 	}
-	frm.setAttribute('chgcount', chgCount);
 	var btns = frm.getElementsByClassName('savebtn');
+	var changelabels = frm.querySelectorAll('label.changed');
 	for (i=0; i<btns.length; i++){
-		if (chgCount > 0) btns[i].style.backgroundColor = '#ff0';
+		if (changelabels.length > 0) btns[i].style.backgroundColor = '#ff0';
 		else btns[i].style.backgroundColor = '';
 	}
 }

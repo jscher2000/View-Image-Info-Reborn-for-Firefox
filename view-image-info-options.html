@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Options for View Image Info Reborn 1.8</title>
+<title>Options for View Image Info Reborn 1.9</title>
 <style>
 body {margin: 8px 16px; background-color: #dff; font-size: 16px;}
 h1, h2 {position: relative; margin-bottom: 0;}
@@ -19,22 +19,28 @@ input[disabled] + span + #resizeexplain { display: inline; }
 <form>
 <section>
 	<h2>Menu Item Options<button type="button" id="btnSave0" class="savebtn">Save Changes</button></h2>
-	<p class="chk">Action performed by context menu item: </p>
-		<p><label>Plain click:&nbsp; <select name="menuplain">
-			<option value="window">Show info in popup window</option>
-			<option value="inpage">Show info overlaid on image</option>
-			<option value="intab">Show info in new tab</option>
-		</select></label><br>
-		<label>Shift+click: <select name="menushift">
-			<option value="window">Show info in popup window</option>
-			<option value="inpage">Show info overlaid on image</option>
-			<option value="intab">Show info in new tab</option>
-		</select></label><br>
-		<label>Ctrl+click*: <select name="menuctrl">
-			<option value="window">Show info in popup window</option>
-			<option value="inpage">Show info overlaid on image</option>
-			<option value="intab">Show info in new tab</option>
-		</select></label> *<em>on Mac, Command+click</em></p>
+	<p>Menu Style:</p>
+		<p class="rad"><label><input type="radio" name="radMenuStyle" value="single"> Single Item (use modifier keys to select different commands)</label><br> 
+		<label><input type="radio" name="radMenuStyle" value="flyout"> Sub-menu (show commands on a fly-out menu)</label></p>
+	<p class="chk">Action performed by Single Item with different modifiers: </p>
+	<p><label>Plain click:&nbsp; <select name="menuplain">
+		<option value="window">Show info in popup window</option>
+		<option value="inpage">Show info overlaid on image</option>
+		<option value="intab">Show info in new tab</option>
+		<option value="viewimg">View image in current tab</option>
+	</select></label><br>
+	<label>Shift+click: <select name="menushift">
+		<option value="window">Show info in popup window</option>
+		<option value="inpage">Show info overlaid on image</option>
+		<option value="intab">Show info in new tab</option>
+		<option value="viewimg">View image in current tab</option>
+	</select></label><br>
+	<label>Ctrl+click*: <select name="menuctrl">
+		<option value="window">Show info in popup window</option>
+		<option value="inpage">Show info overlaid on image</option>
+		<option value="intab">Show info in new tab</option>
+		<option value="viewimg">View image in current tab</option>
+	</select></label> &nbsp;&nbsp;*<em>on Mac, Command+click</em></p>
 </section>
 <section>
 	<h2>Popup Options<button type="button" id="btnSave1" class="savebtn">Save Changes</button></h2>
@@ -49,10 +55,19 @@ input[disabled] + span + #resizeexplain { display: inline; }
 			<option value="size15">15px</option>
 			<option value="size16">16px</option>
 		</select></label>
-	<p>Layout and sizing:</p>
-		<p class="rad"><label><input type="radio" name="radPreview" value="topthumb"> Preview thumbnail above</label><br> 
-		<label><input type="radio" name="radPreview" value="topfitw"> Preview above up to available width</label><br> 
-		<label><input type="radio" name="radPreview" value="classic"> Preview below (classic style)</label></p>
+	<p>Preview image position and sizing:</p>
+		<p class="rad"><label><input type="radio" name="radPreview" value="topthumb"> Preview above info -- thumbnail</label> &nbsp; <label>(Max height: <select name="maxthumbheight">
+			<option value="120">120px</option>
+			<option value="150">150px</option>
+			<option value="180">180px</option>
+			<option value="210">210px</option>
+			<option value="240">240px</option>
+			<option value="280">280px</option>
+			<option value="320">320px</option>
+		</select> )</label><br> 
+		<label><input type="radio" name="radPreview" value="topfitw"> Preview above info -- up to available width</label><br> 
+		<label><input type="radio" name="radPreview" value="classic"> Preview below info (classic style)</label></p>
+	<p>Window size and position:</p>
 		<p class="rad"><label><input type="radio" name="radSizing" value="auto"> Automatic (let Firefox decide window size and position)</label><br>
 		<label><input type="radio" name="radSizing" value="capture"><span> Retain last custom size saved from the popup (<span id="currwidth"></span> × <span id="currheight"></span>)<span id="savepos"><br> 
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(and position <span id="currleft"></span> @ <span id="currtop"></span>)</span></span><span id="resizeexplain"><br>

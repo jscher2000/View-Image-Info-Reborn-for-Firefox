@@ -159,9 +159,9 @@ function handleMessage(request, sender, sendResponse){
 				td = document.createElement('td');
 				th.textContent = 'Image Size: ';
 				td.id = 'decodedSize-' + moredetails.now;
-				sz = '(Unconfirmed)';
+				var sz = '(Unconfirmed)';
 				if (moredetails.decodedSize){
-					var sz = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.decodedSize.toLocaleString() + ')';
+					sz = (+(Math.round(moredetails.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.decodedSize.toLocaleString() + ')';
 					if (moredetails.transferSize > 0) sz += ' (transferred ' + (+(Math.round(moredetails.transferSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + moredetails.transferSize.toLocaleString() + ') in ' +  (+(Math.round(moredetails.transferTime/1000 + 'e+2')  + 'e-2')).toLocaleString() + ' seconds)';
 				}
 				td.textContent = sz;

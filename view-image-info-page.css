@@ -7,6 +7,7 @@
   version 1.6.1 - bug fixes
   version 1.7 - Referrer
   version 1.8 - Referrer for preview, updated layout
+  version 1.9 - Thumbnail height adjustment, emojify save button
 */
 
 body {
@@ -20,6 +21,7 @@ body {
 	font-size: var(--body-size);
 	overflow-y: scroll;
 	font-family: sans-serif;
+	--maxthumbheight: 240px; /* [v1.9] */
 }
 
 /* Color scheme */
@@ -81,6 +83,7 @@ body[colorscheme="dark"]{
 	border-color: transparent !important;
 	min-width: 30px;
 	min-height: 30px;
+	filter: grayscale(1);
 }
 #options:hover, #options:focus,
 #btnprint:hover, #btnprint:focus,
@@ -154,7 +157,7 @@ main.ver1dot8 #previewpar {
 }
 main.ver1dot8 #preview {
 	max-width: calc(100vw - 200px);
-	max-height: 240px;
+	max-height: var(--maxthumbheight);
 }
 main.ver1dot8 #preview.shrinkToFit {
 	cursor: zoom-in;
@@ -170,6 +173,7 @@ main.ver1dot8 #preview.fitw {
 	background-color: highlight;
 	font-weight: bold;
 	padding: 4px 12px;
+	margin-top: 2em;
 }
 #oops button {
 	margin-left: 1em;
