@@ -4,6 +4,7 @@
   Styles for in-page overlay
   version 1.0 - MVP
   version 1.4 - tweaks
+  version 1.9.1 - tweaks
 */
 
 /* Color scheme */
@@ -29,6 +30,7 @@
 	--info-text-color: #000;
 	--info-back-color: #f4f4f4;
 	--link-color: #00f;
+	--info-font-size: 16px;
 }
 .viewimageinforeborn[colorscheme="dark"]{
 	--info-text-color: #f4f4f4;
@@ -36,24 +38,27 @@
 	--link-color: #0ff;
 }
 .viewimageinforeborn {
-	min-width: 300px;
-	border: 1px solid #888;
-	margin: 1px;
-	padding: 2px 4px;
+	min-width: 25em;
+	border: 1px solid #888 !important;
+	margin: 1px !important;
+	padding: 0 !important;
 	position: absolute !important; 
 	z-index: 10000 !important;
-	color: var(--info-text-color);
-	background-color: var(--info-back-color);
+	color: var(--info-text-color) !important;
+	background-color: var(--info-back-color) !important;
 	font-family: sans-serif !important;
-	font-size: 16px;
+	font-size: var(--info-font-size) !important;
 	line-height: 1.2em;
 	user-select: text !important;
 }
 .viewimageinforeborn th, .viewimageinforeborn td {
-	padding: 2px 0;
+	padding: 2px 4px !important;
 	text-align: left;
 	vertical-align: top;
-	font-weight: normal;
+	font-weight: normal !important;
+	color: var(--info-text-color) !important;
+	background-color: var(--info-back-color) !important;
+	font-size: var(--info-font-size) !important;
 }
 .viewimageinforeborn th {
 	white-space: nowrap;
@@ -63,7 +68,7 @@
 }
 .viewimageinforeborn .closebtn {
 	cursor: pointer;
-	margin-top: -2px;
+	margin-right: -2px;
 	padding: 0 6px;
 }
 @media screen and (min-width: 900px){

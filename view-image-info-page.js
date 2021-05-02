@@ -14,6 +14,7 @@
   version 1.8 - Referrer for preview, popup position option
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, list picture tag sources (if any)
   version 1.9 - Thumbnail height adjustment
+  version 1.9.1 - bug fix
 */
 
 let details = {};
@@ -431,13 +432,14 @@ function updatePreview(refUrl){		// [v1.8]
 	};
 	var url = new URL(img.src);
 	var searcharray = url.search.slice(1).split('&');
-	if (searcharray.length == 2 && refUrl.length > 0){				// add Referer
+	var refIndex = searcharray.findIndex(el => el.indexOf('viirreferrer=') > -1);
+	if (refIndex == -1 && refUrl.length > 0){				// add Referer
 		url.search += '&viirreferrer=' + encodeURIComponent(refUrl);
-	} else if (searcharray.length == 3 && refUrl.length == 0) {		// remove Referer
-		searcharray.pop();
+	} else if (refIndex > -1 && refUrl.length == 0) {		// remove Referer
+		searcharray.splice(refIndex, 1);
 		url.search = '?' + searcharray.join('&');
-	} else if (searcharray.length == 3 && refUrl.length > 0) {		// update Referer
-		searcharray[2] = 'viirreferrer=' + encodeURIComponent(refUrl);
+	} else if (refIndex > -1 && refUrl.length > 0) {		// update Referer
+		searcharray[refIndex] = 'viirreferrer=' + encodeURIComponent(refUrl);
 		url.search = '?' + searcharray.join('&');
 	} else {
 		console.log('Unexpected url.search and searcharray: ', url.search, searcharray);

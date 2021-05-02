@@ -11,6 +11,7 @@
   version 1.6 - Save As options
   version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, check for picture tag
+  version 1.9.1 - bug fixes
 */
 
 /**** Handle Requests from Background script ****/
@@ -99,7 +100,7 @@ function handleMessage(request, sender, sendResponse){
 				tbl.id = 'viir-' + moredetails.now;
 				tbl.className = 'viewimageinforeborn';
 				tbl.setAttribute('colorscheme', moredetails.colorscheme);
-				tbl.setAttribute('fontsize', moredetails.fontsize);
+				tbl.setAttribute('style', '--info-font-size: ' + moredetails.fontsize);
 				if (document.contentType.indexOf('image/') === 0) tbl.setAttribute('standalone', true);
 				var tbod = document.createElement('tbody');
 				tbl.appendChild(tbod);
@@ -108,6 +109,12 @@ function handleMessage(request, sender, sendResponse){
 				var th = document.createElement('th');
 				var td = document.createElement('td');
 				th.textContent = 'Image URL: ';
+				var btn = document.createElement('button');
+				btn.textContent = ' X ';
+				btn.id = 'btnclose' + tbl.id;
+				btn.setAttribute('style', 'float: right');
+				btn.className = 'closebtn';
+				td.appendChild(btn);
 				var lnk = document.createElement('a');
 				if (moredetails.currentSrc != ''){
 					lnk.href = moredetails.currentSrc;
@@ -120,12 +127,6 @@ function handleMessage(request, sender, sendResponse){
 					lnk.textContent = moredetails.sourceUrl;
 				}
 				td.appendChild(lnk);
-				var btn = document.createElement('button');
-				btn.textContent = ' X ';
-				btn.id = 'btnclose' + tbl.id;
-				btn.setAttribute('style', 'float: right');
-				btn.className = 'closebtn';
-				td.appendChild(btn);
 				row.appendChild(th);
 				row.appendChild(td);
 				tbod.appendChild(row);
@@ -264,6 +265,28 @@ function handleMessage(request, sender, sendResponse){
 				else url.search += '&viirnow=' + moredetails.now;
 				imgTest.src = url.href;
 			}
+		} else if (targetProps.currentSrc == moredetails.sourceUrl) {	// [v1.9.1]
+			// populate moredetails from targetprops
+			moredetails.pageUrl = targetProps.pageUrl;
+			moredetails.pageTitle = targetProps.pageTitle;
+			moredetails.referUrl = targetProps.referUrl;
+			moredetails.currentSrc = targetProps.currentSrc;
+			moredetails.imgSrc = targetProps.imgSrc;
+			moredetails.naturalHeight = targetProps.naturalHeight;
+			moredetails.naturalWidth = targetProps.naturalWidth;
+			moredetails.scaledHeight = targetProps.scaledHeight;
+			moredetails.scaledWidth = targetProps.scaledWidth;
+			moredetails.mimeType = targetProps.mimeType;
+			moredetails.decodedSize = targetProps.decodedSize;
+			moredetails.transferSize = targetProps.transferSize;
+			moredetails.transferTime = targetProps.transferTime;
+			moredetails.attribJSON = targetProps.attribJSON;
+			moredetails.ahref = targetProps.ahref;
+			moredetails.picsrc = targetProps.picsrc;
+			// Send updated details to background
+			browser.runtime.sendMessage({
+				showinfo: moredetails
+			});
 		} else {
 			window.alert('Wasn\'t able to determine where you right-clicked??');
 		}

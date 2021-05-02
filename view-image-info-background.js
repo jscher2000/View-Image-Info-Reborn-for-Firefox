@@ -11,6 +11,7 @@
   version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, check for picture tag
   version 1.9 - Menu choices, View Image in same tab
+  version 1.9.1 - bug fix, initial scaffolding for background images
 */
 
 /**** Create and populate data structure ****/
@@ -134,6 +135,50 @@ function setupMenus(){
 			}
 		})
 	}
+	// TODO: Proximate images (background or behind) [v2.0]
+	/*
+		console.log('Background image menu setup...');
+		browser.menus.create({
+			id: 'viewBackgroundImageInfoParent',
+			title: 'View Background Image Info',
+			contexts: ['page', 'selection', 'link', 'video']
+		});
+		if (proxArray.length > 0){
+			// Sort array to try to get the most relevant elements at the beginning
+			proxArray.sort(function(a, b){
+				// Higher z-index wins
+				if (a.zIndex > b.zIndex) return -1;
+				if (a.zIndex < b.zIndex) return 1;
+				// Breaks ties on id (invert DOM order)
+				if (a.id > b.id) return -1;
+				if (a.id < b.id) return 1;
+			});
+			// Add menu items
+			var added = [];
+			for (var i=0; i<proxArray.length; i++){
+				if (!added.includes(proxArray[i].srcUrl)){
+					added.push(proxArray[i].srcUrl);
+					var fname = new URL(proxArray[i].srcUrl).pathname.split('/');
+					if (fname[fname.length-1] == '') fname.pop();
+				}
+				// TODO How to avoid duplicates? Clean file names?
+				browser.menus.create({
+					id: 'viir_prox_' + proxArray[i].id,
+					parentId: 'viewBackgroundImageInfoParent',
+					title: proxArray[i].tag + ': ' + fname[fname.length-1],
+					contexts: ['page', 'selection', 'link', 'video']
+				})
+			}
+		} else {
+			browser.menus.update(
+				'viewBackgroundImageInfoParent',
+				{
+					enabled: false
+				}
+			);
+		}
+	}
+	*/
 }
 
 // Kick off info display with a message to the content script
@@ -174,6 +219,8 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 				default:
 					// User held down two modifier keys? Show the window.
 			}
+		} else if (menuInfo.menuItemId.startsWith('viir_prox_')) {	// Background images [v2.0]
+			// TODO
 		} else {													// Sub-menu [v1.9]
 			switch (menuInfo.menuItemId){
 				case 'viir_viewImage':
@@ -339,6 +386,7 @@ function navToImage(tabId, urlType, imgUrl, tabUrl, frameUrl){	// [v1.9]
 
 
 /**** Handle Requests from Content and Options ****/
+var proxArray = [];
 function handleMessage(request, sender, sendResponse){
 	// Open info page in window or tab
 	if ('showinfo' in request){
@@ -501,6 +549,14 @@ function handleMessage(request, sender, sendResponse){
 				}
 			}).catch((err) => {console.log('Error retrieving "prefs" from storage: '+err.message);});
 		}
+	} else if ('proximate' in request){
+		proxArray = request.proximate;
+		console.log(proxArray);
+		// Clear current menu definition and rebuild;
+		var removing = browser.menus.removeAll();
+		removing.then(() => {
+			setupMenus();
+		});
 	}
 }
 browser.runtime.onMessage.addListener(handleMessage);
