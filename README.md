@@ -12,7 +12,7 @@ Context menu can display the information in different ways. Use the Options page
 
 ![Image of context menu](screenshots/context-menu-flyout_1.9.png)
 
-Version 2.0 adds detection for background images and images "behind" another element. Borrows code from the amazing behind! extension.
+Version 2.0 adds detection for background images and images "behind" another element. Borrows code from the amazing behind! extension ([content.js](https://github.com/kubuzetto/behind/blob/master/content.js)).
 
 ![Image of context menu](screenshots/context-background_2.0.png)
 
