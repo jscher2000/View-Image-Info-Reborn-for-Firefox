@@ -4,13 +4,17 @@ Many users are missing the convenience of View Image Info on the right-click con
 
 https://addons.mozilla.org/firefox/addon/view-image-info-reborn/ 
 
-## Screenshots (version 1.9)
+## Screenshots (version 2.0)
 
 Context menu can display the information in different ways. Use the Options page to change what click, Shift+Click and Ctrl+click (Mac: Command+Click) do with the single item, or choose the fly-out menu style.
 
 ![Image of context menu](screenshots/context-menu-single_1.9.png)
 
 ![Image of context menu](screenshots/context-menu-flyout_1.9.png)
+
+Version 2.0 adds detection for background images and images "behind" another element. Borrows code from the amazing behind! extension.
+
+![Image of context menu](screenshots/context-background_2.0.png)
 
 By default, you get a new window with the usual details.
 
