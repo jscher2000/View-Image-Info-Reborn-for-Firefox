@@ -12,6 +12,7 @@
   version 1.8 - Referrer for preview, popup position option, attribute list, updated layout
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, check for picture tag
   version 1.9.1 - bug fixes
+  version 2.0 - launch background/behind features
 */
 
 /**** Handle Requests from Background script ****/
@@ -89,6 +90,9 @@ function handleMessage(request, sender, sendResponse){
 				}
 			}
 			moredetails.picsrc = JSON.stringify(picturesrc);
+			// Add proximate image data [v2.0]
+			if (lastRightClick.length > 0) moredetails.proximate = lastRightClick;
+			else moredetails.proximate = [];
 			// Send updated details to background
 			browser.runtime.sendMessage({
 				showinfo: moredetails

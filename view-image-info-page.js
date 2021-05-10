@@ -69,6 +69,7 @@ if (timenow){
 		} else {
 			document.getElementById('scaledWidth').textContent = details.scaledWidth + 'px';
 			document.getElementById('scaledHeight').textContent = details.scaledHeight + 'px';
+			if (details.tag != 'IMG') document.getElementById('scaledDesc').textContent = 'in/on/behind element sized';
 		}
 		if (details.decodedSize){
 			document.getElementById('decodedSize').textContent = (+(Math.round(details.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + details.decodedSize.toLocaleString() + ')';
@@ -78,19 +79,30 @@ if (timenow){
 		}
 
 		// Build attributes table rows [v1.8]
+		document.getElementById('tagname').textContent = '<' + details.tag.toLowerCase() + '>';	// [v2.0]
 		var arrAtt = JSON.parse(details.attribJSON);
 		// Clone and populate templated row
  		var newTR = document.getElementById('new2cellrow'), clone, cells, dest = document.getElementById('tbattributes');
 		for (var j=0; j<arrAtt.length; j++){
 			if (arrAtt[j].attrvalue.length > 0){ // Skip empty attributes because... WTF
-				clone = document.importNode(new2cellrow.content, true);
+				clone = document.importNode(newTR.content, true);
 				cells = clone.querySelectorAll('tr>th, tr>td');
 				cells[0].textContent = arrAtt[j].attrname;
 				cells[1].textContent = arrAtt[j].attrvalue;
 				dest.appendChild(clone);
 			}
 		}
-
+		// If any background properties, add to attributes table [v2.0]
+		if (details.bgprops){
+			clone = document.importNode(newTR.content, true);
+			cells = clone.querySelectorAll('tr>th, tr>td');
+			cells[0].textContent = '[computedCSS]';
+			var bgprops = Object.entries(details.bgprops);
+			for (j=0; j<bgprops.length; j++){
+				cells[1].textContent += bgprops[j][0] + ': ' + bgprops[j][1] + '; ';
+			}
+			dest.appendChild(clone);
+		}
 		// Populate context table
 		document.getElementById('pageTitle').textContent = details.pageTitle;
 		var refHref = details.pageUrl;
@@ -114,7 +126,7 @@ if (timenow){
 		var picsrcs = JSON.parse(details.picsrc);
 		dest = document.getElementById('tbcontext');
 		for (var j=0; j<picsrcs.length; j++){
-			clone = document.importNode(new2cellrow.content, true);
+			clone = document.importNode(newTR.content, true);
 			cells = clone.querySelectorAll('tr>th, tr>td');
 			cells[0].textContent = '<picture>';
 			cells[1].textContent = '<source srcset="' + picsrcs[j].srcset + '" media="' + picsrcs[j].media + '">';
@@ -149,6 +161,16 @@ if (timenow){
 			// check zoom-ability [v1.8]
 			if (img.height != img.naturalHeight && details.previewstyle == 'topthumb') img.className = 'shrinkToFit';
 			else if(img.height != img.naturalHeight && details.previewstyle == 'topfitw') img.className = 'fitw';
+			// rewrite dimensions if applicable
+			if (document.getElementById('naturalWidth').textContent == 'nullpx' && img.naturalWidth != null){
+				details.naturalWidth = img.naturalWidth;
+				document.getElementById('naturalWidth').textContent = details.naturalWidth + 'px';
+				details.naturalHeight = img.naturalHeight;
+				document.getElementById('naturalHeight').textContent = details.naturalHeight + 'px';
+				if (details.naturalWidth == details.scaledWidth && details.naturalHeight == details.scaledHeight){
+					document.getElementById('scaled').style.display = 'none';
+				}
+			}
 		};
 		var url = new URL(prefUrl);
 		if (url.search.length == 0) url.search = '?viirnocache=' + details.now;

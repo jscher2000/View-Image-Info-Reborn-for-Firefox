@@ -12,6 +12,7 @@
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, check for picture tag
   version 1.9 - Menu choices, View Image in same tab
   version 1.9.1 - bug fix, initial scaffolding for background images
+  version 2.0 - launch background/behind features
 */
 
 /**** Create and populate data structure ****/
@@ -59,128 +60,115 @@ let pops = [];
 var currentStyle;
 function setupMenus(){
 	currentStyle = oPrefs.menustyle;
-	if (oPrefs.menustyle == 'single'){			// Traditional single item
-		browser.menus.create({
-			id: 'viewImageInfoReborn',
-			title: 'View Image Info...',
-			contexts: ['image']
-		});
-	} else if (oPrefs.menustyle == 'flyout'){	// Sub-menu items [v1.9]
-		browser.menus.create({
-			id: 'viewImageInfoRebornParent',
-			title: 'View Image Info Reborn',
-			contexts: ['image']
-		});
-		browser.menus.create({
-			id: 'viir_viewImage',
-			parentId: 'viewImageInfoRebornParent',
-			title: 'View Image... in this tab',
-			contexts: ['image'],
-			"icons": {
-				"32": "img/mountain-32.png"
-			}
-		})
-		browser.menus.create({
-			id: 'viir_window',
-			parentId: 'viewImageInfoRebornParent',
-			title: 'View Image Info in New Window',
-			contexts: ['image'],
-			"icons": {
-				"32": "img/info-32.png"
-			}
-		})
-		browser.menus.create({
-			id: 'viir_tab',
-			parentId: 'viewImageInfoRebornParent',
-			title: 'View Image Info in New Tab',
-			contexts: ['image'],
-			"icons": {
-				"32": "img/info-32.png"
-			}
-		})
-		browser.menus.create({
-			id: 'viir_overlay',
-			parentId: 'viewImageInfoRebornParent',
-			title: 'View Image Info in Overlay',
-			contexts: ['image'],
-			"icons": {
-				"32": "img/info-32.png"
-			}
-		})
-		browser.menus.create({
-			id: 'viir_nowebp',
-			parentId: 'viewImageInfoRebornParent',
-			title: 'Save As... Request without image/webp',
-			contexts: ['image'],
-			"icons": {
-				"32": "img/floppydisk-32.png"
-			}
-		})
-		browser.menus.create({
-			id: 'viir_asie11',
-			parentId: 'viewImageInfoRebornParent',
-			title: 'Save As... Request as Internet Explorer 11',
-			contexts: ['image'],
-			"icons": {
-				"32": "img/floppydisk-32.png"
-			}
-		})
-		browser.menus.create({
-			id: 'viir_options',
-			parentId: 'viewImageInfoRebornParent',
-			title: 'Open the Options page',
-			contexts: ['image'],
-			"icons": {
-				"32": "img/gear-32.png"
-			}
-		})
-	}
-	// TODO: Proximate images (background or behind) [v2.0]
-	/*
-		console.log('Background image menu setup...');
+	if (proxArray.length == 0 || (proxArray.length == 1 && proxArray[0].tag == 'IMG' && proxArray[0].target === true)){
+		if (oPrefs.menustyle == 'single'){			// Traditional single item
+			browser.menus.create({
+				id: 'viewImageInfoReborn',
+				title: 'View Image Info...',
+				contexts: ['image']
+			});
+		} else if (oPrefs.menustyle == 'flyout'){	// Sub-menu items [v1.9]
+			browser.menus.create({
+				id: 'viewImageInfoRebornParent',
+				title: 'View Image In&fo Reborn',
+				contexts: ['image']
+			});
+			browser.menus.create({
+				id: 'viir_viewImage',
+				parentId: 'viewImageInfoRebornParent',
+				title: 'View &Image... in this tab',
+				contexts: ['image'],
+				"icons": {
+					"32": "img/mountain-32.png"
+				}
+			})
+			browser.menus.create({
+				id: 'viir_window',
+				parentId: 'viewImageInfoRebornParent',
+				title: 'View Image Info in New &Window',
+				contexts: ['image'],
+				"icons": {
+					"32": "img/info-32.png"
+				}
+			})
+			browser.menus.create({
+				id: 'viir_tab',
+				parentId: 'viewImageInfoRebornParent',
+				title: 'View Image Info in New &Tab',
+				contexts: ['image'],
+				"icons": {
+					"32": "img/info-32.png"
+				}
+			})
+			browser.menus.create({
+				id: 'viir_overlay',
+				parentId: 'viewImageInfoRebornParent',
+				title: 'View Image Info in O&verlay',
+				contexts: ['image'],
+				"icons": {
+					"32": "img/info-32.png"
+				}
+			})
+			browser.menus.create({
+				id: 'viir_nowebp',
+				parentId: 'viewImageInfoRebornParent',
+				title: '&Save As... Request without image/webp',
+				contexts: ['image'],
+				"icons": {
+					"32": "img/floppydisk-32.png"
+				}
+			})
+			browser.menus.create({
+				id: 'viir_asie11',
+				parentId: 'viewImageInfoRebornParent',
+				title: 'Save &As... Request as Internet Explorer 11',
+				contexts: ['image'],
+				"icons": {
+					"32": "img/floppydisk-32.png"
+				}
+			})
+			browser.menus.create({
+				id: 'viir_options',
+				parentId: 'viewImageInfoRebornParent',
+				title: 'Open the &Options page',
+				contexts: ['image'],
+				"icons": {
+					"32": "img/gear-32.png"
+				}
+			})
+		}
+	} else if (proxArray.length > 0) {
 		browser.menus.create({
 			id: 'viewBackgroundImageInfoParent',
 			title: 'View Background Image Info',
 			contexts: ['page', 'selection', 'link', 'video']
 		});
-		if (proxArray.length > 0){
-			// Sort array to try to get the most relevant elements at the beginning
-			proxArray.sort(function(a, b){
-				// Higher z-index wins
-				if (a.zIndex > b.zIndex) return -1;
-				if (a.zIndex < b.zIndex) return 1;
-				// Breaks ties on id (invert DOM order)
-				if (a.id > b.id) return -1;
-				if (a.id < b.id) return 1;
-			});
-			// Add menu items
-			var added = [];
-			for (var i=0; i<proxArray.length; i++){
-				if (!added.includes(proxArray[i].srcUrl)){
-					added.push(proxArray[i].srcUrl);
-					var fname = new URL(proxArray[i].srcUrl).pathname.split('/');
-					if (fname[fname.length-1] == '') fname.pop();
-				}
-				// TODO How to avoid duplicates? Clean file names?
-				browser.menus.create({
-					id: 'viir_prox_' + proxArray[i].id,
-					parentId: 'viewBackgroundImageInfoParent',
-					title: proxArray[i].tag + ': ' + fname[fname.length-1],
-					contexts: ['page', 'selection', 'link', 'video']
-				})
+		// Sort array to try to get the most relevant elements at the beginning
+		proxArray.sort(function(a, b){
+			// Higher z-index wins
+			if (a.zIndex > b.zIndex) return -1;
+			if (a.zIndex < b.zIndex) return 1;
+			// Breaks ties on id (invert DOM order)
+			if (a.id > b.id) return -1;
+			if (a.id < b.id) return 1;
+		});
+		// Add menu items
+		var added = [];
+		for (var i=0; i<proxArray.length; i++){
+			if (!added.includes(proxArray[i].srcUrl)){
+				added.push(proxArray[i].srcUrl);
+				var fname = new URL(proxArray[i].srcUrl).pathname.split('/');
+				if (fname[fname.length-1] == '') fname.pop();
 			}
-		} else {
-			browser.menus.update(
-				'viewBackgroundImageInfoParent',
-				{
-					enabled: false
-				}
-			);
+			browser.menus.create({
+				id: 'viir_prox_' + proxArray[i].id,
+				parentId: 'viewBackgroundImageInfoParent',
+				title: proxArray[i].tag + ': ' + fname[fname.length-1],
+				contexts: ['page', 'selection', 'link', 'video']
+			})
 		}
 	}
-	*/
 }
-
 // Kick off info display with a message to the content script
 let watchlist = [];
 var injectedFrames = [];
@@ -199,6 +187,29 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 		// Send message to the content script to gather information or show an overlay
 		var imgmsg = {};
 		imgmsg.axn = 'window';
+		// Use time as object key
+		imgmsg.now = Date.now();
+		// Track source tab and reporting tab (initially the same)
+		imgmsg.tabId = currTab.id;
+		imgmsg.reportingTab = currTab.id;
+		// Track frame in source tab (rarely applicable)
+		imgmsg.frameId = menuInfo.frameId;
+		// Track private window status (for new popup window)
+		imgmsg.incognito = currTab.incognito;
+		// Record info provided from the menu API
+		imgmsg.targetElementId = menuInfo.targetElementId;
+		imgmsg.sourceUrl = menuInfo.srcUrl || '';
+		// Record user preferences
+		imgmsg.colorscheme = oPrefs.colorscheme;
+		imgmsg.fontsize = oPrefs.fontsize + 'px';
+		imgmsg.popwidth = oPrefs.popwidth;
+		imgmsg.popheight = oPrefs.popheight;
+		imgmsg.poptop = oPrefs.poptop;
+		imgmsg.popleft = oPrefs.popleft;
+		imgmsg.previewstyle = oPrefs.previewstyle;
+		imgmsg.maxthumbheight = oPrefs.maxthumbheight;
+		imgmsg.autoopen = oPrefs.autoopen;
+
 		// Process menu choice
 		if (menuInfo.menuItemId == 'viewImageInfoReborn'){			// Traditional single item
 			// Check modifiers to determine action
@@ -220,7 +231,83 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 					// User held down two modifier keys? Show the window.
 			}
 		} else if (menuInfo.menuItemId.startsWith('viir_prox_')) {	// Background images [v2.0]
-			// TODO
+			var proxId = menuInfo.menuItemId.split('_')[2];
+			var oImgInfo = proxArray.find(objRequest => objRequest.id === parseInt(proxId));
+			// Update pops array object from proxyArray
+			imgmsg.tag = oImgInfo.tag;
+			imgmsg.pageUrl = oImgInfo.props.pageUrl;
+			imgmsg.pageTitle = oImgInfo.props.pageTitle;
+			imgmsg.referUrl = oImgInfo.props.referUrl;
+			imgmsg.currentSrc = oImgInfo.props.currentSrc;
+			imgmsg.imgSrc = oImgInfo.props.imgSrc;
+			imgmsg.naturalHeight = oImgInfo.props.naturalHeight;
+			imgmsg.naturalWidth = oImgInfo.props.naturalWidth;
+			imgmsg.scaledHeight = oImgInfo.props.scaledHeight;
+			imgmsg.scaledWidth = oImgInfo.props.scaledWidth;
+			imgmsg.decodedSize = oImgInfo.props.decodedSize;
+			imgmsg.transferSize = oImgInfo.props.transferSize;
+			imgmsg.transferTime = oImgInfo.props.transferTime;
+			imgmsg.attribJSON = oImgInfo.props.attribJSON;
+			imgmsg.ahref = oImgInfo.props.ahref;
+			imgmsg.picsrc = oImgInfo.props.picsrc;
+			imgmsg.bgprops = oImgInfo.props.bgprops;
+			imgmsg.mimeType = oImgInfo.props.mimeType;
+			imgmsg.proximate = proxArray;
+			imgmsg.fileName = '';
+			imgmsg.lastModified = '';
+
+			// Add reference information to array (at beginning, so .find/.findIndex gets the latest match)
+			pops.unshift(imgmsg);
+
+			// Update watchlist for header interception
+			watchlist.unshift({
+				id: imgmsg.now,
+				url: imgmsg.sourceUrl,
+				currentSrcUrl: imgmsg.currentSrc,
+				imgSrcUrl: imgmsg.imgSrc,
+				fileName: '',
+				lastMod: '',
+				done: false
+			});
+
+			// Finally time to display the popup
+			var props = {
+				type: 'popup', 
+				incognito: imgmsg.incognito,
+				url: '/view-image-info-page.html?request=' + imgmsg.now + '&pop=true'
+			};
+			if (oPrefs.popheight != 'auto'){
+				props.height = parseInt(oPrefs.popheight);
+			}
+			if (oPrefs.popwidth != 'auto'){
+				props.width = parseInt(oPrefs.popwidth);
+			}
+			if (oPrefs.poptop != 'auto'){
+				props.top = parseInt(oPrefs.poptop);		// not working yet, see bug 1271047
+			}
+			if (oPrefs.popleft != 'auto'){
+				props.left = parseInt(oPrefs.popleft);		// not working yet, see bug 1271047
+			}
+			var w = browser.windows.create(props);
+			w.then((winfo) => {
+				imgmsg.reportingTab = winfo.tabs[0].id;
+				if (oPrefs.poptop != 'auto' || oPrefs.popleft != 'auto'){	// set position [v1.8]
+					var props = {};
+					if (oPrefs.poptop != 'auto'){
+						props.top = parseInt(oPrefs.poptop);
+					}
+					if (oPrefs.popleft != 'auto'){
+						props.left = parseInt(oPrefs.popleft);
+					}
+					browser.windows.update(
+						winfo.id,
+						props
+					);
+				}
+			});
+			// Don't run the rest of this function
+			return;
+
 		} else {													// Sub-menu [v1.9]
 			switch (menuInfo.menuItemId){
 				case 'viir_viewImage':
@@ -250,30 +337,9 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 			return;
 		}
 
-		// Assemble reference information
-		// Use time as object key
-		imgmsg.now = Date.now();
-		// Track source tab and reporting tab (initially the same)
-		imgmsg.tabId = currTab.id;
-		imgmsg.reportingTab = currTab.id;
-		// Track frame in source tab (rarely applicable)
-		imgmsg.frameId = menuInfo.frameId;
-		// Track private window status (for new popup window)
-		imgmsg.incognito = currTab.incognito;
-		// Record info provided from the menu API
-		imgmsg.targetElementId = menuInfo.targetElementId;
-		imgmsg.sourceUrl = menuInfo.srcUrl;
-		// Record user preferences
-		imgmsg.colorscheme = oPrefs.colorscheme;
-		imgmsg.fontsize = oPrefs.fontsize + 'px';
-		imgmsg.popwidth = oPrefs.popwidth;
-		imgmsg.popheight = oPrefs.popheight;
-		imgmsg.poptop = oPrefs.poptop;
-		imgmsg.popleft = oPrefs.popleft;
-		imgmsg.previewstyle = oPrefs.previewstyle;
-		imgmsg.maxthumbheight = oPrefs.maxthumbheight;
-		imgmsg.autoopen = oPrefs.autoopen;
-		// Add to array (at beginning, so .find/.findIndex gets the latest match)
+		// If we are here, this must be an inline image
+		imgmsg.tag = 'IMG';
+		// Add reference information to array (at beginning, so .find/.findIndex gets the latest match)
 		pops.unshift(imgmsg);
 		
 		// Update watchlist for header interception
@@ -409,6 +475,7 @@ function handleMessage(request, sender, sendResponse){
 			oImgInfo.attribJSON = oContentInfo.attribJSON;
 			oImgInfo.ahref = oContentInfo.ahref;
 			oImgInfo.picsrc = oContentInfo.picsrc;
+			oImgInfo.proximate = oContentInfo.proximate || []; // [v2.0]
 			oImgInfo.mimeType = oContentInfo.mimeType;
 			oImgInfo.fileName = '';
 			oImgInfo.lastModified = '';
@@ -551,11 +618,12 @@ function handleMessage(request, sender, sendResponse){
 		}
 	} else if ('proximate' in request){
 		proxArray = request.proximate;
-		console.log(proxArray);
 		// Clear current menu definition and rebuild;
 		var removing = browser.menus.removeAll();
 		removing.then(() => {
 			setupMenus();
+		}).then(() => {
+			browser.menus.refresh();
 		});
 	}
 }

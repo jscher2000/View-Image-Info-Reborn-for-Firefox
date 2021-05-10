@@ -26,14 +26,15 @@
 				   <label title="Set Referer header to: _ORIGINPATH_"><input type="radio" name="radReferPolicy" value="origin-path">Origin/Path</label></p>
 			</form>
 		</span>
-	<button id="btnprint" type="button" title="Print">🖨️</button> 
-	<button id="showresize" type="button" title="Show/Hide Resizer">↔</button> 
-	<button id="options" type="button" title="Open Options page">⚙️</button></span>
+		<button id="btnprint" type="button" title="Print">🖨️</button> 
+		<button id="showresize" type="button" title="Show/Hide Resizer">↔</button> 
+		<button id="options" type="button" title="Open Options page">⚙️</button>
+	</span>
 </header>
 <main class="ver1dot8">
 	<p id="oops"><span></span><button id="btnclose" type="button" title="Close">X</button></p>
 	<div id="previewdiv">
-		<p id="previewpar"><img id="preview" src="" style="" height="240" width="320"></p>
+		<p id="previewpar"><img id="preview" src="" height="240" width="320"></p>
 		<ul id="previewtools"><li><button class="btnRefer" title="Do not add a Referer header">NR</button></li></ul>
 	</div>
 	<table class="imageinfo"><thead>
@@ -42,12 +43,12 @@
 		<tr id="imgurl"><th>Image URL: </th><td><span id="sourceUrl"></span></td></tr>
 		<tr id="fname"><th title="filename parameter provided by the server in the Content-Disposition header">C-D filename: </th><td><span id="fileName"><span></td></tr>
 		<tr><th title="Last part of the Content-Type header provided by the server">Image Type: </th><td><span id="mimeType">(Unconfirmed)</span></td></tr>
-		<tr><th>Dimensions: </th><td><span id="naturalWidth"></span> × <span id="naturalHeight"></span><span id="scaled"> (scaled to <span id="scaledWidth"></span> × <span id="scaledHeight"></span>)</span></td></tr>
+		<tr><th>Dimensions: </th><td><span id="naturalWidth"></span> × <span id="naturalHeight"></span><span id="scaled"> (<span id="scaledDesc">scaled to</span> <span id="scaledWidth"></span> × <span id="scaledHeight"></span>)</span></td></tr>
 		<tr><th title="Retrieved using the window.performance() API, decodedBodySize property">Image Size: </th><td><span id="decodedSize"></span></td></tr>
 		<tr id="modified"><th title="Value of Last-Modified header provided by the server">Last Modified: </th><td><span id="lastMod"></span></td></tr>
 	</tbody></table>
 	<table class="imageinfo"><thead>
-		<th colspan="2"><span>&lt;img&gt; Attributes</span></th>
+		<th colspan="2"><span><code id="tagname"></code> Attributes</span></th>
 	</thead><tbody id="tbattributes">
 	</tbody></table>
 	<table class="imageinfo"><thead>
