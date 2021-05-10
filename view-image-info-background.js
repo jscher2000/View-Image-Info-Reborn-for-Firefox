@@ -13,6 +13,7 @@
   version 1.9 - Menu choices, View Image in same tab
   version 1.9.1 - bug fix, initial scaffolding for background images
   version 2.0 - launch background/behind features
+  version 2.0.1 - bug fix (prevent menus showing older items on restricted domains)
 */
 
 /**** Create and populate data structure ****/
@@ -399,6 +400,14 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 		}
 	}
 });
+browser.menus.onHidden.addListener(() => {	// [v2.0.1]
+	// reset proxArray and remove menu, otherwise, inappropriate items appear on restricted domains 
+	if (proxArray.length > 0){
+		proxArray = [];
+		var removing = browser.menus.removeAll();
+		removing.then(() => { setupMenus(); });
+	}
+});
 
 function navToImage(tabId, urlType, imgUrl, tabUrl, frameUrl){	// [v1.9]
 	// Update watchlist for header interception
@@ -476,6 +485,7 @@ function handleMessage(request, sender, sendResponse){
 			oImgInfo.ahref = oContentInfo.ahref;
 			oImgInfo.picsrc = oContentInfo.picsrc;
 			oImgInfo.proximate = oContentInfo.proximate || []; // [v2.0]
+			oImgInfo.bgprops = oContentInfo.bgprops || null; // [v2.0]
 			oImgInfo.mimeType = oContentInfo.mimeType;
 			oImgInfo.fileName = '';
 			oImgInfo.lastModified = '';
