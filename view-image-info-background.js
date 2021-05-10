@@ -14,6 +14,7 @@
   version 1.9.1 - bug fix, initial scaffolding for background images
   version 2.0 - launch background/behind features
   version 2.0.1 - bug fix (prevent menus showing older items on restricted domains)
+  version 2.0.2 - bug fix (menus missing on non-linked images when background image is present)
 */
 
 /**** Create and populate data structure ****/
@@ -142,7 +143,7 @@ function setupMenus(){
 		browser.menus.create({
 			id: 'viewBackgroundImageInfoParent',
 			title: 'View Background Image Info',
-			contexts: ['page', 'selection', 'link', 'video']
+			contexts: ['page', 'selection', 'link', 'video', "image"]
 		});
 		// Sort array to try to get the most relevant elements at the beginning
 		proxArray.sort(function(a, b){
@@ -165,7 +166,7 @@ function setupMenus(){
 				id: 'viir_prox_' + proxArray[i].id,
 				parentId: 'viewBackgroundImageInfoParent',
 				title: proxArray[i].tag + ': ' + fname[fname.length-1],
-				contexts: ['page', 'selection', 'link', 'video']
+				contexts: ['page', 'selection', 'link', 'video', "image"]
 			})
 		}
 	}

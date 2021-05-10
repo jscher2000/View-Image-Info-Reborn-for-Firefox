@@ -5,7 +5,6 @@
   Draws heavily from https://github.com/kubuzetto/behind/blob/master/content.js by Devrim Şahin 
   version 1.9.1 - bug fix, initial scaffolding for background images
   version 2.0 - launch background/behind features
-  version 2.0.1 - bug fix (temporary workaround for menu not appearing on td>img)
 */
 
 var targetProps = {}, lastRightClick = [];
@@ -16,11 +15,6 @@ function gatherProx(evt){
 	// If this is an inline image, capture target properties before it's too late (think YT hover previews)
 	if (evt.target.nodeName == 'IMG'){
 		targetProps = getProps(evt.target);
-		// TEMPORARY: If the immediate parent is a table cell, quit now [v2.0.1]
-		if (evt.target.parentNode.nodeName == 'TD'){
-			lastRightClick = [];
-			return;
-		}
 	}
 
 	// Catalog proximate images, starting from html tag [v2.0]
