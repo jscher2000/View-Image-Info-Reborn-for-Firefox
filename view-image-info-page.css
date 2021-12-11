@@ -8,6 +8,7 @@
   version 1.7 - Referrer
   version 1.8 - Referrer for preview, updated layout
   version 1.9 - Thumbnail height adjustment, emojify save button
+  version 2.1 - TinEye image search button, spruce up srcset formatting
 */
 
 body {
@@ -73,7 +74,7 @@ body[colorscheme="dark"]{
 	background-color: var(--body-back-color);
 	border-radius: 4px;
 }
-#options, #btnprint, #showresize, #btnsaveas {
+#options, #tineye, #btnprint, #showresize, #btnsaveas {
 	-moz-appearance: none;
 	font-size: var(--body-size);
 	padding: 1px 2px 3px 2px !important;
@@ -86,6 +87,7 @@ body[colorscheme="dark"]{
 	filter: grayscale(1);
 }
 #options:hover, #options:focus,
+#tineye:not([disabled]):hover, #tineye:not([disabled]):focus,
 #btnprint:hover, #btnprint:focus,
 #showresize:hover, #showresize:focus,
 #btnsaveas:hover, #btnsaveas:focus {
@@ -94,6 +96,13 @@ body[colorscheme="dark"]{
 #btnsaveas[state="open"] {
 	color: var(--body-back-color);
 	background-color: var(--body-text-color) !important;
+}
+/* TinEye search button [v2.1] */
+#tineye {
+	background-image: url(tineye/tineye16.png);
+	background-size: var(--body-size);
+	background-position: center;
+	background-repeat: no-repeat;
 }
 .imageinfo {
 	border: none;
@@ -119,6 +128,15 @@ body[colorscheme="dark"]{
 }
 .imageinfo thead th {
 	padding: 0 0 3px 0;
+}
+.imageinfo td p {
+	margin-top: 0;
+}
+.imageinfo td p:last-of-type {
+	margin-bottom: 0;
+}
+.imageinfo .urlnote {
+	font-weight: bold;
 }
 @media screen {
 	.imageinfo {

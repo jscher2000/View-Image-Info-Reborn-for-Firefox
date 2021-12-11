@@ -7,6 +7,7 @@
   version 1.5 - add Last-Modified, window/tab options
   version 1.8 - Referrer for preview, popup position option, updated layout
   version 1.9 - Menu choices, thumbnail height adjustment
+  version 2.1 - TinEye image search button, light/dark theme support, unfinished support for future option to require Ctrl/Command key for proximate image detection on inline images
 */
 
 /*** Initialize Page ***/
@@ -28,9 +29,11 @@ var oSettings = {
 	previewstyle: 'topthumb',	// or 'topfitw' or 'classic' for below [v1.8]
 	maxthumbheight: 240,		// pixels [v1.9]
 	tabinback: false,			// whether to open tab in the background [v1.5]
+	tineyesort: 'sort=score&order=desc',	// user can modify from best match on options page [v2.1]
+	bgonctrl: false,			// whether to require Ctrl/Command key to check proximate images (FUTURE FEATURE)
+	ctrlcommand: '',			// platform key (FUTURE FEATURE)
 	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
-
 // Update oSettings from storage
 browser.storage.local.get("prefs").then( (results) => {
 	if (results.prefs != undefined){
@@ -92,6 +95,19 @@ browser.storage.local.get("prefs").then( (results) => {
 		if (oSettings[chks[i].name] == true) chks[i].checked = true;
 		else chks[i].checked = false;
 	}
+	// TinEye sort [v2.1]
+	document.forms[0].tineyesort.value = oSettings.tineyesort;
+	sels = document.querySelectorAll('select[name="tineyesort"]');
+	for (var i=0; i<sels.length; i++){
+		var selopt = document.querySelector('select[name="' + sels[i].name + '"] option[value="' + oSettings[sels[i].name] + '"]');
+		selopt.setAttribute('selected', 'selected');
+	}
+	// Add user's platform-specific Ctrl / Command key info (not saved unless user makes a change) [v2.1] (FUTURE FEATURE)
+	var gpi = browser.runtime.getPlatformInfo();
+	gpi.then((pi) => {
+		if(pi.os == 'mac') oSettings.ctrlcommand = 'metaKey';
+		else oSettings.ctrlcommand = 'ctrlKey';
+	});
 	// More to come later
 }).catch((err) => {
 	console.log('Error retrieving "prefs" from storage: '+err.message);
@@ -135,6 +151,8 @@ function updatePref(evt){
 	for (var i=0; i<chks.length; i++){
 		oSettings[chks[i].name] = chks[i].checked;
 	}
+	// TinEye sort [v2.1]
+	oSettings.tineyesort = document.forms[0].tineyesort.value;
 	// More to come later
 	
 	// Update storage
@@ -220,6 +238,12 @@ function lightSaveBtn(evt){
 					evt.target.labels[0].className = '';
 				}
 			} else if (evt.target.name.indexOf('maxthumbheight') > -1){
+				if (parseInt(evt.target.value) !== oSettings[evt.target.name]){
+					evt.target.labels[0].className = 'changed';
+				} else {
+					evt.target.labels[0].className = '';
+				}
+			} else if (evt.target.name.indexOf('tineyesort') > -1){
 				if (parseInt(evt.target.value) !== oSettings[evt.target.name]){
 					evt.target.labels[0].className = 'changed';
 				} else {

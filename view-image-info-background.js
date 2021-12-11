@@ -15,6 +15,7 @@
   version 2.0 - launch background/behind features
   version 2.0.1 - bug fix (prevent menus showing older items on restricted domains)
   version 2.0.2 - bug fix (menus missing on non-linked images when background image is present)
+  version 2.1 - TinEye image search button
 */
 
 /**** Create and populate data structure ****/
@@ -36,6 +37,9 @@ var oPrefs = {
 	previewstyle: 'topthumb',	// or 'topfitw' or 'classic' for below [v1.8]
 	maxthumbheight: 240,		// pixels [v1.9]
 	tabinback: false,			// whether to open tab in the background [v1.5]
+	tineyesort: 'sort=score&order=desc',	// user can modify from best match on options page [v2.1]
+	bgonctrl: false,			// whether to require Ctrl/Command key to check proximate images (FUTURE FEATURE)
+	ctrlcommand: '',			// platform key (FUTURE FEATURE)
 	autoopen: true				// show bar automatically on stand-alone image pages (FUTURE FEATURE)
 }
 

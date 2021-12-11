@@ -2,16 +2,33 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Options for View Image Info Reborn 1.9</title>
+<title>Options for View Image Info Reborn 2.1</title>
 <style>
-body {margin: 8px 16px; background-color: #dff; font-size: 16px;}
+body {
+	margin: 8px 16px; font-size: 16px;
+ 	--body-text-color: #00f; color: var(--body-text-color);
+	--body-back-color: #def; background-color: var(--body-back-color);
+}
+@media (prefers-color-scheme: light) {
+	body {
+		--body-text-color: #000; --body-back-color: #f8f8f8;
+		--table-head-color: #f4f4f4; --table-back-color: #333;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	body {
+		--body-text-color: #f4f4f4; --body-back-color: #333;
+		--table-head-color: #000; --table-back-color: #e4e4e4;
+	}
+}
 h1, h2 {position: relative; margin-bottom: 0;}
 h1 {margin-top: 4px;}
 .savebtn {position: absolute; top: 0; left: 420px; margin-top: 8px;}
 #savepos, #resizeexplain {display: none;}
 input[disabled] + span { opacity: 0.5; }
 input[disabled] + span + #resizeexplain { display: inline; }
-.changed { background-color: #ff0; }
+.changed { background-color: #ff0; color: #000; }
+.indent { margin-left: 18px; }
 </style>
 </head>
 <body>
@@ -54,7 +71,7 @@ input[disabled] + span + #resizeexplain { display: inline; }
 			<option value="size14">14px</option>
 			<option value="size15">15px</option>
 			<option value="size16">16px</option>
-		</select></label>
+		</select></label></p>
 	<p>Preview image position and sizing:</p>
 		<p class="rad"><label><input type="radio" name="radPreview" value="topthumb"> Preview above info -- thumbnail</label> &nbsp; <label>(Max height: <select name="maxthumbheight">
 			<option value="120">120px</option>
@@ -77,12 +94,31 @@ input[disabled] + span + #resizeexplain { display: inline; }
 	<h2>Other Options<button type="button" id="btnSave2" class="savebtn">Save Changes</button></h2>
 	<p>Tab viewing options:</p>
 		<p class="chk"><label><input type="checkbox" name="tabinback"> Open tab in the background</label></p>
+	<p><label>TinEye Reverse Image Search sort order: <select name="tineyesort">
+			<option value="sort=score&order=desc">Best Match (Most Similar)</option>
+			<option value="sort=score&order=asc">Most Changed</option>
+			<option value="sort=size&order=desc">Biggest Image</option>
+			<option value="sort=crawl_date&order=desc">Newest</option>
+			<option value="sort=crawl_date&order=asc">Oldest</option>
+		</select></label><br>
+		<em>See</em> <a href="https://tineye.com/terms" target="_blank">TinEye Terms of Service</a> and <a href="https://tineye.com/privacy" target="_blank">TinEye Privacy Policy</a></p>
 <!--
+	<p>Background/Behind Detection options:</p>
+		<p class="chk"><label><input type="checkbox" name="bgonctrl"> Only with Ctrl (Mac: command) + right-click on inline images</label><br> 
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(Holding Shift always bypasses detection)</p>
 	<p>Automatic display:</p>
 		<p class="chk"><label><input type="checkbox" name="autoopen"> Show info automatically on stand-alone web images</label></p>
 -->
 </section>
 </form>
 <script src="view-image-info-options.js"></script>
+
+<h1>Copyright and License Attributions</h1>
+<p>Code of the <a href="https://addons.mozilla.org/firefox/addon/behind/" target="_blank">behind!</a> extension (&copy; 2021 Devrim Şahin) used under the terms of the Mozilla Public License 2.0, which can be found at <a href="https://www.mozilla.org/en-US/MPL/2.0/" target="_blank">https://www.mozilla.org/en-US/MPL/2.0/</a>.</p>
+<p>Button icon, text, and code of the <a href="https://addons.mozilla.org/firefox/addon/tineye-reverse-image-search/" target="_blank">TinEye Reverse Image Search</a> extension (&copy; 2021 TinEye) used under the terms of the MIT License, which provides as follows.</p>
+<div class="indent">
+	<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+	<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+</div>
 </body>
 </html>

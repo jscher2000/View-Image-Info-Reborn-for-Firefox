@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="view-image-info-page.css" type="text/css">
-<title>View Image Info Reborn 1.9</title>
+<title>View Image Info Reborn 2.1</title>
 </head>
 <body>
 <header>
@@ -26,6 +26,7 @@
 				   <label title="Set Referer header to: _ORIGINPATH_"><input type="radio" name="radReferPolicy" value="origin-path">Origin/Path</label></p>
 			</form>
 		</span>
+		<button id="tineye" type="button" title="Send to TinEye for Reverse Image Search">&nbsp;</button> 
 		<button id="btnprint" type="button" title="Print">🖨️</button> 
 		<button id="showresize" type="button" title="Show/Hide Resizer">↔</button> 
 		<button id="options" type="button" title="Open Options page">⚙️</button>
@@ -40,7 +41,7 @@
 	<table class="imageinfo"><thead>
 		<th colspan="2"><span>Properties</span></th>
 	</thead><tbody>
-		<tr id="imgurl"><th>Image URL: </th><td><span id="sourceUrl"></span></td></tr>
+		<tr id="imgurl"><th>Image URL: </th><td id="sourceUrl"></td></tr>
 		<tr id="fname"><th title="filename parameter provided by the server in the Content-Disposition header">C-D filename: </th><td><span id="fileName"><span></td></tr>
 		<tr><th title="Last part of the Content-Type header provided by the server">Image Type: </th><td><span id="mimeType">(Unconfirmed)</span></td></tr>
 		<tr><th>Dimensions: </th><td><span id="naturalWidth"></span> × <span id="naturalHeight"></span><span id="scaled"> (<span id="scaledDesc">scaled to</span> <span id="scaledWidth"></span> × <span id="scaledHeight"></span>)</span></td></tr>
@@ -72,5 +73,8 @@
 </body>
 <template id="new2cellrow">
 	<tr><th></th><td></td></tr>
+</template>
+<template id="new3spanpara">
+	<p><span class="srcurl"></span> <span class="urlnote"></span> <span class="srcopts"></span></p>
 </template>
 </html>

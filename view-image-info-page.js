@@ -15,9 +15,17 @@
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, list picture tag sources (if any)
   version 1.9 - Thumbnail height adjustment
   version 1.9.1 - bug fix
+  version 2.1 - TinEye image search button, file names for saving data URLs, spruce up srcset formatting, data: URI bug fix
 */
 
 let details = {};
+let dfname = {
+	download: '',
+	title: '',
+	alt: '',
+	ahref: ''
+};
+let prefUrl = '';
 
 // Request data from background
 var params = new URLSearchParams(document.location.search.substring(1));
@@ -31,7 +39,7 @@ if (timenow){
 		// Set color scheme and font size
 		document.body.setAttribute('colorscheme', details.colorscheme);
 		document.body.setAttribute('style', '--body-size: ' + details.fontsize + ';--maxthumbheight: ' + details.maxthumbheight + 'px');
-		var prefUrl = '', urlNote = '';
+		var urlNote = '';
 		if (details.currentSrc != ''){
 			prefUrl = details.currentSrc;
 			if (details.currentSrc != details.imgSrc) urlNote = ' (currentSrc)';
@@ -48,13 +56,23 @@ if (timenow){
 			main.appendChild(document.getElementById('previewdiv'));
 		}
 		// Populate data into the page
-		document.getElementById('sourceUrl').textContent = prefUrl + urlNote;
+		// (1) URL of displayed (preview) image
+		var targetcell = document.getElementById('sourceUrl');
+		//     Clone and populate templated paragraph
+ 		var newP = document.getElementById('new3spanpara'), Pclone, spans;
+		Pclone = document.importNode(newP.content, true);
+		spans = Pclone.querySelectorAll('span');
+		spans[0].textContent = prefUrl;
+		if (urlNote != '') spans[1].textContent = urlNote.trim();
+		targetcell.appendChild(Pclone);
+		// (2) Content-Disposition filename
 		if (details.fileName && document.getElementById('fileName').textContent == ''){
 			document.getElementById('fileName').textContent = details.fileName;
 			document.getElementById('fname').style.display = '';
 		} else if (document.getElementById('fileName').textContent == ''){
 			document.getElementById('fname').style.display = 'none';
 		}
+		// (3) Content-Type
 		if (details.mimeType){
 			document.getElementById('mimeType').textContent = details.mimeType.slice(details.mimeType.indexOf('/')+1).toUpperCase();
 			document.getElementById('defaultmime').textContent = '(' + document.getElementById('mimeType').textContent + ')';
@@ -62,6 +80,7 @@ if (timenow){
 			// Try again in case it's a timing problem
 			st = window.setTimeout(getMime, 300);
 		}
+		// (4) Dimensions
 		document.getElementById('naturalWidth').textContent = details.naturalWidth + 'px';
 		document.getElementById('naturalHeight').textContent = details.naturalHeight + 'px';
 		if (details.naturalWidth == details.scaledWidth && details.naturalHeight == details.scaledHeight){
@@ -71,9 +90,11 @@ if (timenow){
 			document.getElementById('scaledHeight').textContent = details.scaledHeight + 'px';
 			if (details.tag != 'IMG') document.getElementById('scaledDesc').textContent = 'in/on/behind element sized';
 		}
+		// (5) Image size
 		if (details.decodedSize){
 			document.getElementById('decodedSize').textContent = (+(Math.round(details.decodedSize/1024 + 'e+2')  + 'e-2')).toLocaleString() + ' KB (' + details.decodedSize.toLocaleString() + ')';
 		}
+		// (6) Last Modified Date
 		if (details.lastModified && details.lastModified.length > 0){
 			document.getElementById('lastMod').textContent = details.lastModified;
 		}
@@ -88,8 +109,25 @@ if (timenow){
 				clone = document.importNode(newTR.content, true);
 				cells = clone.querySelectorAll('tr>th, tr>td');
 				cells[0].textContent = arrAtt[j].attrname;
-				cells[1].textContent = arrAtt[j].attrvalue;
-				dest.appendChild(clone);
+				if (arrAtt[j].attrname.trim() != 'srcset'){
+					cells[1].textContent = arrAtt[j].attrvalue;
+					dest.appendChild(clone);
+				} else {
+					dest.appendChild(clone);
+					// Clone and populate templated paragraph for each URL
+					var arrSrcSet = arrAtt[j].attrvalue.split(',');
+					for (var k=0; k<arrSrcSet.length; k++){
+						Pclone = document.importNode(newP.content, true);
+						spans = Pclone.querySelectorAll('span');
+						spans[0].textContent = arrSrcSet[k].split(' ')[0] || 'unknown url';
+						spans[1].textContent = arrSrcSet[k].split(' ')[1] || 'unknown size';
+						cells[1].appendChild(Pclone);
+					}
+				}
+				// if attribute name matches a key in dfname, store the data
+				if (['download','title','alt'].includes(arrAtt[j].attrname)){
+					dfname[arrAtt[j].attrname] = arrAtt[j].attrvalue;
+				}
 			}
 		}
 		// If any background properties, add to attributes table [v2.0]
@@ -119,6 +157,7 @@ if (timenow){
 		}
 		if (details.ahref && details.ahref.length > 0){
 			document.getElementById('ahref').textContent = details.ahref;
+			dfname.ahref = details.ahref; // actually, can we get the download attribute from the link? TODO
 		} else {
 			document.getElementById('linkhref').style.display = 'none';
 		}
@@ -173,15 +212,40 @@ if (timenow){
 			}
 		};
 		var url = new URL(prefUrl);
-		if (url.search.length == 0) url.search = '?viirnocache=' + details.now;
-		else url.search += '&viirnocache=' + details.now;
+		if (url.protocol == 'http:' || url.protocol == 'https:'){
+			if (url.search.length == 0) url.search = '?viirnocache=' + details.now;
+			else url.search += '&viirnocache=' + details.now;
+		}
 		img.src = url.href;
 		
 		// Create Save as Request Links
 		document.querySelector('#saveasserved a[href]').href = url.href.replace('viirnocache', 'viirattach');
 		document.querySelector('#saveasnoaccept a[href]').href = url.href.replace('viirnocache', 'viirstripwebp');
 		document.querySelector('#saveasie11 a[href]').href = url.href.replace('viirnocache', 'viirasie11');
-		
+		if (url.protocol == 'data:'){
+			if (dfname.download.length > 0){
+				document.querySelector('#saveasserved a[href]').setAttribute('download', dfname.download);
+				document.querySelector('#saveaspng a[href]').setAttribute('download', dfname.download);
+				document.querySelector('#saveasjpg a[href]').setAttribute('download', dfname.download);
+			} else if (dfname.alt.length > 0){
+				document.querySelector('#saveasserved a[href]').setAttribute('download', dfname.alt);
+				document.querySelector('#saveaspng a[href]').setAttribute('download', dfname.alt);
+				document.querySelector('#saveasjpg a[href]').setAttribute('download', dfname.alt);
+			} else if (dfname.title.length > 0){
+				document.querySelector('#saveasserved a[href]').setAttribute('download', dfname.title);
+				document.querySelector('#saveaspng a[href]').setAttribute('download', dfname.title);
+				document.querySelector('#saveasjpg a[href]').setAttribute('download', dfname.title);
+			} else {
+				document.querySelector('#saveasserved a[href]').setAttribute('download', 'unnamed_image');
+			}
+			// disable re-request options
+			document.querySelector('#saveasnoaccept a[href]').setAttribute('disabled', 'disabled');
+			document.querySelector('#saveasie11 a[href]').setAttribute('disabled', 'disabled');
+			// disable TinEye button 
+			document.querySelector('#tineye').setAttribute('disabled', 'disabled');
+			document.querySelector('#tineye').setAttribute('title', 'TinEye Reverse Image Search not available for data: URIs');
+		}
+
 		// Update Referrer Form Options [v1.7]
 		var ref = new URL(refHref);
 		var lbl = document.querySelector('#referForm input[value="origin-only"]').labels[0];
@@ -209,6 +273,11 @@ function getMime(){
 // Event handlers
 document.getElementById('options').addEventListener('click', function(evt){
 	browser.runtime.openOptionsPage();
+}, false);
+document.getElementById('tineye').addEventListener('click', function(evt){
+	url = 'https://tineye.com/search/?url=' + encodeURIComponent(prefUrl) + '&' + details.tineyesort;
+	window.open(url, '_blank');
+	evt.target.blur();
 }, false);
 document.getElementById('btnprint').addEventListener('click', function(evt){
 	window.print();
@@ -313,13 +382,23 @@ document.getElementById('btnCancel').addEventListener('click', function(evt){
 // Save As menu / Image Conversions [v1.6]
 function makeBlobDownload(tgtLink, fmt){
 	// Create download filename
-	var fname = document.getElementById('fileName').textContent;
 	var img = document.getElementById('preview');
-	var qual = 0.92;
+	var fname = tgtLink.getAttribute('download').trim();
 	if (fname.length == 0){
-		var path = new URL(img.src).pathname;
-		if (path.slice(path.length - 1) == '/') path = path.slice(0, path.length - 1);
-		fname = path.slice(path.lastIndexOf('/') + 1);
+		fname = document.getElementById('fileName').textContent;
+	}
+	if (fname.length == 0){
+		var previewUrl = new URL(img.src);
+		if (previewUrl.protocol != 'data:'){
+			var path = previewUrl.pathname;
+			if (path.slice(path.length - 1) == '/') path = path.slice(0, path.length - 1);
+			fname = path.slice(path.lastIndexOf('/') + 1);
+		} else {
+			if (dfname.download.length > 0) fname = dfname.download;
+			else if (dfname.alt.length > 0) fname = dfname.alt;
+			else if (dfname.title.length > 0) fname = dfname.title;
+			else fname = 'unnamed_image';
+		}
 	}
 	if (fmt == 'image/jpeg'){
 		fname = fname.replace(/\.webp/i, '.jpg').replace(/\.png/i, '.jpg').replace(/\.gif/i, '.jpg');
@@ -342,6 +421,7 @@ function makeBlobDownload(tgtLink, fmt){
 		ctx.fillRect(0, 0, canv.width, canv.height);
 	}
 	// Then add the image and update the link
+	var qual = 0.92;
 	try {
 		ctx.drawImage(img, 0, 0);
 		canv.toBlob((blob) => {

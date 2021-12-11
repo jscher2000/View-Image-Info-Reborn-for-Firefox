@@ -5,6 +5,7 @@
   version 1.0 - MVP
   version 1.4 - tweaks
   version 1.9.1 - tweaks
+  version 2.1 - bug fix for centering of overlay
 */
 
 /* Color scheme */
@@ -75,13 +76,13 @@
 	.viewimageinforeborn[standalone]{
 		width: 800px;
 		left: 50%;
-		margin-left: -400px;
+		margin-left: -400px !important;
 	}
 }
 @media screen and (max-width: 899px){
 	.viewimageinforeborn[standalone]{
 		width: 90vw;
 		left: 50%;
-		margin-left: calc((90vw * 0.5 * -1) + 20px);
+		margin-left: calc((90vw * 0.5 * -1) + 20px) !important;
 	}
 }

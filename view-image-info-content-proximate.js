@@ -5,16 +5,32 @@
   Draws heavily from https://github.com/kubuzetto/behind/blob/master/content.js by Devrim Şahin 
   version 1.9.1 - bug fix, initial scaffolding for background images
   version 2.0 - launch background/behind features
+  version 2.1 - Unfinished support for future option to require Ctrl/Command key for proximate image detection on inline images
 */
 
 var targetProps = {}, lastRightClick = [];
 
 document.addEventListener('contextmenu', gatherProx, true);
 
+// Check for any proximate image options [v2.1]
+var oSettings = {};
+browser.storage.local.get("prefs").then( (results) => {
+	if (results.prefs != undefined){
+		if (JSON.stringify(results.prefs) != '{}'){
+			var arrSavedPrefs = Object.keys(results.prefs)
+			for (var j=0; j<arrSavedPrefs.length; j++){
+				oSettings[arrSavedPrefs[j]] = results.prefs[arrSavedPrefs[j]];
+			}
+		}
+	}
+});
+
 function gatherProx(evt){
 	// If this is an inline image, capture target properties before it's too late (think YT hover previews)
 	if (evt.target.nodeName == 'IMG'){
 		targetProps = getProps(evt.target);
+		// Do not gather/send proximate image info if user requires Ctrl/Command, unless Ctrl/Command was pressed [v2.1]
+		if (oSettings.bgonctrl == true && evt[oSettings.ctrlcommand] != true) return; // What about MacOS?
 	}
 
 	// Catalog proximate images, starting from html tag [v2.0]
