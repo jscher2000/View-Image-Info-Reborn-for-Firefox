@@ -15,7 +15,8 @@
   version 1.8.1 - Adjust source URL conflict resolution to prefer currentSrc, list picture tag sources (if any)
   version 1.9 - Thumbnail height adjustment
   version 1.9.1 - bug fix
-  version 2.1 - TinEye image search button, file names for saving data URLs, spruce up srcset formatting, data: URI bug fix
+  version 2.1 - TinEye image search button, file names for saving data URI images, spruce up srcset formatting
+  version 2.1.1 - bug fix for srcset
 */
 
 let details = {};
@@ -119,8 +120,9 @@ if (timenow){
 					for (var k=0; k<arrSrcSet.length; k++){
 						Pclone = document.importNode(newP.content, true);
 						spans = Pclone.querySelectorAll('span');
-						spans[0].textContent = arrSrcSet[k].split(' ')[0] || 'unknown url';
-						spans[1].textContent = arrSrcSet[k].split(' ')[1] || 'unknown size';
+						var srcsz = arrSrcSet[k].trim();
+						spans[0].textContent = srcsz.split(/\s/)[0] || 'unknown url';
+						spans[1].textContent = srcsz.split(/\s/)[1] || 'unknown size';
 						cells[1].appendChild(Pclone);
 					}
 				}
